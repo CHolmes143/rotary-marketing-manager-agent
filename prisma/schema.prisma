@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CampaignStatus {
+  draft
+  active
+  archived
+}
+
+enum FactStatus {
+  draft
+  approved
+  expired
+  archived
+}
+
+enum FactStability {
+  permanent
+  annual_review
+  temporary
+}
+
+enum FilenameParseStatus {
+  matched
+  partial
+  invalid
+}
+
+enum AssetType {
+  image
+  video
+}
+
+enum AnalysisStatus {
+  pending
+  completed
+  failed
+  skipped
+}
+
+enum GenerationStatus {
+  draft
+  finalized
+  discarded
+}
+
+enum Platform {
+  facebook
+  instagram
+}
+
+enum PatternScope {
+  platform
+  campaign
+  rotary_wide
+}
+
+enum TrainingSourceType {
+  google_drive_doc
+  uploaded_file
+  manual_note
+}
+
+enum TrainingSourceScope {
+  campaign
+  rotary_wide
+}
+
+enum TrainingSourceStatus {
+  pending_ingestion
+  ingested
+  archived
+}
+
+model Campaign {
+  id               String                  @id @default(cuid())
+  name             String
+  slug             String                  @unique
+  shortDescription String
+  status           CampaignStatus          @default(draft)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  facts            CampaignKnowledgeFact[]
+  assets           CreativeAsset[]
+  generatedSets    GeneratedCopySet[]
+  learningRecords  LearningRecord[]
+  trainingSources  TrainingSource[]
+}
+
+model CampaignKnowledgeFact {
+  id             String        @id @default(cuid())
+  campaignId     String
+  category       String
+  label          String
+  value          String
+  status         FactStatus    @default(draft)
+  stability      FactStability @default(annual_review)
+  effectiveStart DateTime?
+  effectiveEnd   DateTime?
+  sourceNote     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  campaign       Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, label])
+}
+
+model ContentType {
+  id              String             @id @default(cuid())
+  group           String
+  name            String
+  slug            String             @unique
+  description     String?
+  active          Boolean            @default(true)
+  assets          CreativeAsset[]
+  generatedSets   GeneratedCopySet[]
+  learningRecords LearningRecord[]
+}
+
+model CreativeAsset {
+  id                   String             @id @default(cuid())
+  campaignId           String
+  contentTypeId         String?
+  filenameOriginal     String
+  filenameCampaign     String?
+  filenameContentType  String?
+  filenameSubject      String?
+  filenameAssetPurpose String?
+  filenameVersion      String?
+  filenameParseStatus  FilenameParseStatus
+  filenameParseWarnings Json
+  assetType            AssetType
+  storageKey           String
+  mimeType             String
+  fileSize             Int
+  uploadedAt           DateTime           @default(now())
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  campaign             Campaign           @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contentType          ContentType?        @relation(fields: [contentTypeId], references: [id])
+  analysis             CreativeAnalysis?
+  generatedSets        GeneratedCopySet[]
+  learningRecords      LearningRecord[]
+}
+
+model CreativeAnalysis {
+  id                String         @id @default(cuid())
+  creativeAssetId   String         @unique
+  analysisStatus    AnalysisStatus @default(pending)
+  detectedText      String?
+  visualSummary     String?
+  detectedSubjects  Json?
+  confidence        Float?
+  framesAnalyzed    Int?
+  modelUsed         String?
+  analysisWarnings  Json?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  creativeAsset     CreativeAsset  @relation(fields: [creativeAssetId], references: [id], onDelete: Cascade)
+}
+
+model GeneratedCopySet {
+  id                      String         @id @default(cuid())
+  campaignId              String
+  creativeAssetId          String
+  contentTypeId            String?
+  generationStatus         GenerationStatus @default(draft)
+  promptVersion            String
+  modelUsed                String
+  campaignFactsSnapshot    Json
+  creativeContextSnapshot  Json
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  campaign                 Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creativeAsset            CreativeAsset  @relation(fields: [creativeAssetId], references: [id], onDelete: Cascade)
+  contentType              ContentType?   @relation(fields: [contentTypeId], references: [id])
+  platformCopies           PlatformCopy[]
+}
+
+model PlatformCopy {
+  id                 String           @id @default(cuid())
+  generatedCopySetId String
+  platform           Platform
+  aiDraft            String
+  currentEditableCopy String
+  finalCopy          String?
+  editReason         String?
+  ctaUsed            String?
+  finalizedAt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  generatedCopySet   GeneratedCopySet @relation(fields: [generatedCopySetId], references: [id], onDelete: Cascade)
+}
+
+model LearningRecord {
+  id                String       @id @default(cuid())
+  campaignId        String
+  contentTypeId     String?
+  creativeAssetId   String?
+  platform          Platform
+  subject           String?
+  objective         String?
+  aiDraft           String
+  finalCopy         String
+  editReason        String?
+  ctaUsed           String?
+  emojiPattern      String?
+  hashtagPattern    String?
+  formattingPattern String?
+  voicePattern      String?
+  patternScope      PatternScope @default(platform)
+  confidence        Float?
+  rationale         String?
+  firstObservedAt   DateTime     @default(now())
+  lastObservedAt    DateTime     @default(now())
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  campaign          Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contentType       ContentType?  @relation(fields: [contentTypeId], references: [id])
+  creativeAsset     CreativeAsset? @relation(fields: [creativeAssetId], references: [id])
+}
+
+model TrainingSource {
+  id           String               @id @default(cuid())
+  stableKey    String               @unique
+  campaignId   String?
+  title        String
+  sourceType   TrainingSourceType
+  scope        TrainingSourceScope  @default(campaign)
+  status       TrainingSourceStatus @default(pending_ingestion)
+  sourceUrl    String?
+  storageKey   String?
+  capturedFrom String?
+  accessNote   String?
+  extractedText String?
+  summary      String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  campaign     Campaign?            @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+}

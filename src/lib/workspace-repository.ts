@@ -1,0 +1,319 @@
+import { revalidatePath } from "next/cache";
+import { getPrisma } from "@/lib/db";
+import {
+  campaigns,
+  contentTaxonomy,
+  normalizeToken,
+  trainingSources,
+} from "@/lib/rotary-data";
+
+export type LearningRecordView = {
+  id: string;
+  platform: "Facebook" | "Instagram";
+  contentType: string;
+  subject: string;
+  aiDraft: string;
+  finalCopy: string;
+  editReason: string;
+  finalizedAt: string;
+};
+
+export type FinalizeCopyInput = {
+  campaignSlug: string;
+  filename: string;
+  contentType: string;
+  subject: string;
+  assetPurpose: string;
+  filenameParseStatus: "matched" | "partial" | "invalid";
+  filenameParseWarnings: string[];
+  facebookDraft: string;
+  instagramDraft: string;
+  facebookCopy: string;
+  instagramCopy: string;
+  facebookReason: string;
+  instagramReason: string;
+};
+
+const fallbackRecords: LearningRecordView[] = [];
+
+function toSlug(value: string) {
+  return normalizeToken(value).replace(/([a-z0-9])([A-Z])/g, "$1-$2");
+}
+
+function formatDate(date: Date) {
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export async function ensureSeedData() {
+  const prisma = getPrisma();
+  if (!prisma) return;
+
+  for (const campaign of campaigns) {
+    const dbCampaign = await prisma.campaign.upsert({
+      where: { slug: campaign.slug },
+      create: {
+        name: campaign.name,
+        slug: campaign.slug,
+        shortDescription: campaign.shortDescription,
+        status: campaign.status,
+      },
+      update: {
+        name: campaign.name,
+        shortDescription: campaign.shortDescription,
+        status: campaign.status,
+      },
+    });
+
+    for (const fact of campaign.facts) {
+      await prisma.campaignKnowledgeFact.upsert({
+        where: {
+          campaignId_label: {
+            campaignId: dbCampaign.id,
+            label: fact.label,
+          },
+        },
+        create: {
+          campaignId: dbCampaign.id,
+          category: fact.category,
+          label: fact.label,
+          value: fact.value,
+          status: fact.status,
+          stability: fact.stability,
+        },
+        update: {
+          category: fact.category,
+          value: fact.value,
+          status: fact.status,
+          stability: fact.stability,
+        },
+      });
+    }
+
+    for (const source of trainingSources.filter(
+      (item) => item.campaignSlug === campaign.slug,
+    )) {
+      await prisma.trainingSource.upsert({
+        where: { stableKey: source.id },
+        create: {
+          stableKey: source.id,
+          campaignId: dbCampaign.id,
+          title: source.title,
+          sourceType: source.sourceType,
+          scope: source.scope,
+          status: source.status,
+          capturedFrom: source.capturedFrom,
+          accessNote: source.accessNote,
+        },
+        update: {
+          campaignId: dbCampaign.id,
+          title: source.title,
+          sourceType: source.sourceType,
+          scope: source.scope,
+          status: source.status,
+          capturedFrom: source.capturedFrom,
+          accessNote: source.accessNote,
+        },
+      });
+    }
+  }
+
+  for (const group of contentTaxonomy) {
+    for (const item of group.items) {
+      await prisma.contentType.upsert({
+        where: { slug: toSlug(item) },
+        create: {
+          group: group.group,
+          name: item,
+          slug: toSlug(item),
+        },
+        update: {
+          group: group.group,
+          name: item,
+          active: true,
+        },
+      });
+    }
+  }
+}
+
+export async function getLearningRecords(): Promise<LearningRecordView[]> {
+  const prisma = getPrisma();
+  if (!prisma) return fallbackRecords;
+
+  await ensureSeedData();
+
+  const records = await prisma.learningRecord.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    include: { contentType: true },
+  });
+
+  return records.map((record) => ({
+    id: record.id,
+    platform: record.platform === "facebook" ? "Facebook" : "Instagram",
+    contentType: record.contentType?.name ?? "Unconfirmed content type",
+    subject: record.subject ?? "Unconfirmed subject",
+    aiDraft: record.aiDraft,
+    finalCopy: record.finalCopy,
+    editReason: record.editReason ?? "",
+    finalizedAt: formatDate(record.createdAt),
+  }));
+}
+
+export async function saveFinalizedCopy(input: FinalizeCopyInput) {
+  if (!input.facebookCopy.trim() || !input.instagramCopy.trim()) {
+    return { ok: false, records: await getLearningRecords() };
+  }
+
+  const prisma = getPrisma();
+
+  if (!prisma) {
+    const timestamp = formatDate(new Date());
+    fallbackRecords.unshift(
+      {
+        id: crypto.randomUUID(),
+        platform: "Instagram",
+        contentType: input.contentType,
+        subject: input.subject,
+        aiDraft: input.instagramDraft,
+        finalCopy: input.instagramCopy,
+        editReason: input.instagramReason,
+        finalizedAt: timestamp,
+      },
+      {
+        id: crypto.randomUUID(),
+        platform: "Facebook",
+        contentType: input.contentType,
+        subject: input.subject,
+        aiDraft: input.facebookDraft,
+        finalCopy: input.facebookCopy,
+        editReason: input.facebookReason,
+        finalizedAt: timestamp,
+      },
+    );
+
+    revalidatePath("/");
+    return { ok: true, records: fallbackRecords };
+  }
+
+  await ensureSeedData();
+
+  const campaign = await prisma.campaign.findUniqueOrThrow({
+    where: { slug: input.campaignSlug },
+  });
+  const contentType = await prisma.contentType.upsert({
+    where: { slug: toSlug(input.contentType) },
+    create: {
+      group: "Unconfirmed",
+      name: input.contentType,
+      slug: toSlug(input.contentType),
+    },
+    update: { name: input.contentType },
+  });
+  const factsSnapshot =
+    campaigns
+      .find((item) => item.slug === input.campaignSlug)
+      ?.facts.map((fact) => ({
+        category: fact.category,
+        label: fact.label,
+        value: fact.value,
+        status: fact.status,
+        stability: fact.stability,
+      })) ?? [];
+
+  const asset = await prisma.creativeAsset.create({
+    data: {
+      campaignId: campaign.id,
+      contentTypeId: contentType.id,
+      filenameOriginal: input.filename,
+      filenameCampaign: campaign.name,
+      filenameContentType: input.contentType,
+      filenameSubject: input.subject,
+      filenameAssetPurpose: input.assetPurpose,
+      filenameVersion: input.filename.match(/_([^_]+)\.[^.]+$/)?.[1],
+      filenameParseStatus: input.filenameParseStatus,
+      filenameParseWarnings: input.filenameParseWarnings,
+      assetType: "image",
+      storageKey: `pending-blob/${input.filename}`,
+      mimeType: "application/octet-stream",
+      fileSize: 0,
+    },
+  });
+
+  const copySet = await prisma.generatedCopySet.create({
+    data: {
+      campaignId: campaign.id,
+      creativeAssetId: asset.id,
+      contentTypeId: contentType.id,
+      generationStatus: "finalized",
+      promptVersion: "phase-1-local-draft",
+      modelUsed: "local-template",
+      campaignFactsSnapshot: factsSnapshot,
+      creativeContextSnapshot: {
+        filename: input.filename,
+        subject: input.subject,
+        assetPurpose: input.assetPurpose,
+        warnings: input.filenameParseWarnings,
+      },
+      platformCopies: {
+        create: [
+          {
+            platform: "facebook",
+            aiDraft: input.facebookDraft,
+            currentEditableCopy: input.facebookCopy,
+            finalCopy: input.facebookCopy,
+            editReason: input.facebookReason || null,
+            finalizedAt: new Date(),
+          },
+          {
+            platform: "instagram",
+            aiDraft: input.instagramDraft,
+            currentEditableCopy: input.instagramCopy,
+            finalCopy: input.instagramCopy,
+            editReason: input.instagramReason || null,
+            finalizedAt: new Date(),
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.learningRecord.createMany({
+    data: [
+      {
+        campaignId: campaign.id,
+        contentTypeId: contentType.id,
+        creativeAssetId: asset.id,
+        platform: "facebook",
+        subject: input.subject,
+        objective: input.assetPurpose,
+        aiDraft: input.facebookDraft,
+        finalCopy: input.facebookCopy,
+        editReason: input.facebookReason || null,
+        patternScope: "platform",
+        rationale: `GeneratedCopySet ${copySet.id}`,
+      },
+      {
+        campaignId: campaign.id,
+        contentTypeId: contentType.id,
+        creativeAssetId: asset.id,
+        platform: "instagram",
+        subject: input.subject,
+        objective: input.assetPurpose,
+        aiDraft: input.instagramDraft,
+        finalCopy: input.instagramCopy,
+        editReason: input.instagramReason || null,
+        patternScope: "platform",
+        rationale: `GeneratedCopySet ${copySet.id}`,
+      },
+    ],
+  });
+
+  revalidatePath("/");
+  return { ok: true, records: await getLearningRecords() };
+}
