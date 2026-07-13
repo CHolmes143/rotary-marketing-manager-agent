@@ -5,7 +5,6 @@ import {
   BookOpenText,
   Check,
   ChevronDown,
-  Database,
   FileImage,
   FileVideo,
   Info,
@@ -20,7 +19,6 @@ import { generatePlatformDrafts } from "@/lib/copy-generator";
 import { parseCreativeFilename } from "@/lib/filename-parser";
 import type { LearningRecordView } from "@/lib/workspace-repository";
 import {
-  approvedFacts,
   campaigns,
   contentTaxonomy,
   draftFacts,
@@ -251,31 +249,6 @@ export function MarketingManager({
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge tone="good">Active</Badge>
               <Badge tone="warning">Placeholder facts</Badge>
-            </div>
-          </section>
-
-          <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center gap-2">
-              <Database size={16} className="text-[#17458f]" />
-              <h2 className="text-sm font-semibold">Knowledge Profile</h2>
-            </div>
-            <div className="space-y-3">
-              {approvedFacts(campaign).map((fact) => (
-                <div
-                  key={fact.id}
-                  className="border-b border-stone-100 pb-3 last:border-0 last:pb-0"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold text-stone-700">
-                      {fact.label}
-                    </p>
-                    <Badge tone="good">Approved</Badge>
-                  </div>
-                  <p className="mt-1 text-xs leading-5 text-stone-600">
-                    {fact.value}
-                  </p>
-                </div>
-              ))}
             </div>
           </section>
 
