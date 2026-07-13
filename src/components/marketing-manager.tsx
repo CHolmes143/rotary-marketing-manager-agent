@@ -52,50 +52,6 @@ function Badge({
   );
 }
 
-function PlatformEditor({
-  label,
-  value,
-  draft,
-  editReason,
-  onChange,
-  onReasonChange,
-}: {
-  label: "Facebook" | "Instagram";
-  value: string;
-  draft: string;
-  editReason: string;
-  onChange: (value: string) => void;
-  onReasonChange: (value: string) => void;
-}) {
-  return (
-    <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-stone-950">{label}</h3>
-          <p className="text-xs text-stone-500">One editable platform field</p>
-        </div>
-        <Badge tone={value === draft ? "neutral" : "blue"}>
-          {value === draft ? "AI draft" : "Owner edited"}
-        </Badge>
-      </div>
-      <textarea
-        className="min-h-64 w-full resize-y rounded-md border border-stone-300 bg-white p-3 text-sm leading-6 text-stone-900 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      <label className="mt-3 block text-xs font-medium text-stone-600">
-        Edit reason
-      </label>
-      <input
-        className="mt-1 h-10 w-full rounded-md border border-stone-300 px-3 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
-        placeholder="Optional during the training period"
-        value={editReason}
-        onChange={(event) => onReasonChange(event.target.value)}
-      />
-    </section>
-  );
-}
-
 export function MarketingManager({
   initialRecords,
 }: {
@@ -110,12 +66,9 @@ export function MarketingManager({
     "none",
   );
   const [contentType, setContentType] = useState("Sponsor recruitment");
-  const [facebookCopy, setFacebookCopy] = useState("");
-  const [instagramCopy, setInstagramCopy] = useState("");
-  const [facebookDraft, setFacebookDraft] = useState("");
-  const [instagramDraft, setInstagramDraft] = useState("");
-  const [facebookReason, setFacebookReason] = useState("");
-  const [instagramReason, setInstagramReason] = useState("");
+  const [suggestedCopy, setSuggestedCopy] = useState("");
+  const [revisedCopy, setRevisedCopy] = useState("");
+  const [editReason, setEditReason] = useState("");
   const [records, setRecords] = useState<LearningRecordView[]>(initialRecords);
   const [saveStatus, setSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
@@ -130,14 +83,13 @@ export function MarketingManager({
 
   function handleGenerate() {
     const drafts = generatePlatformDrafts(campaign, parseResult, contentType);
-    setFacebookDraft(drafts.facebook);
-    setInstagramDraft(drafts.instagram);
-    setFacebookCopy(drafts.facebook);
-    setInstagramCopy(drafts.instagram);
+    setSuggestedCopy(drafts.facebook);
+    setRevisedCopy("");
+    setEditReason("");
   }
 
   async function handleFinalize() {
-    if (!facebookCopy.trim() || !instagramCopy.trim()) {
+    if (!suggestedCopy.trim()) {
       return;
     }
 
@@ -152,12 +104,9 @@ export function MarketingManager({
         assetPurpose: parseResult.assetPurpose ?? "Unconfirmed purpose",
         filenameParseStatus: parseResult.status,
         filenameParseWarnings: parseResult.warnings,
-        facebookDraft,
-        instagramDraft,
-        facebookCopy,
-        instagramCopy,
-        facebookReason,
-        instagramReason,
+        suggestedCopy,
+        approvedCopy: revisedCopy,
+        editReason,
       });
 
       setRecords(result.records);
@@ -175,12 +124,9 @@ export function MarketingManager({
   }
 
   function resetDrafts() {
-    setFacebookCopy("");
-    setInstagramCopy("");
-    setFacebookDraft("");
-    setInstagramDraft("");
-    setFacebookReason("");
-    setInstagramReason("");
+    setSuggestedCopy("");
+    setRevisedCopy("");
+    setEditReason("");
   }
 
   const parseTone =
@@ -219,15 +165,6 @@ export function MarketingManager({
             >
               <RotateCcw size={16} />
               Reset
-            </button>
-            <button
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-[#f7a81b] px-4 text-sm font-semibold text-stone-950 transition hover:bg-[#e59a16]"
-              title="Finalize owner-approved copy"
-              onClick={handleFinalize}
-              disabled={saveStatus === "saving"}
-            >
-              <Save size={16} />
-              {saveStatus === "saving" ? "Saving..." : "Update Finalized Copy"}
             </button>
           </div>
         </div>
@@ -446,15 +383,15 @@ export function MarketingManager({
           <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
             <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <h2 className="text-lg font-semibold">Platform Copy</h2>
+                <h2 className="text-lg font-semibold">Copy Approval</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Generate one strong recommendation per platform, then edit in
-                  place before finalizing.
+                  Generate one strong recommendation, then revise or approve it
+                  for the learning record.
                 </p>
               </div>
               <button
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#17458f] px-4 text-sm font-semibold text-white transition hover:bg-[#123a78]"
-                title="Generate Facebook and Instagram copy"
+                title="Generate suggested copy"
                 onClick={handleGenerate}
               >
                 <Sparkles size={16} />
@@ -462,23 +399,57 @@ export function MarketingManager({
               </button>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-2">
-              <PlatformEditor
-                label="Facebook"
-                value={facebookCopy}
-                draft={facebookDraft}
-                editReason={facebookReason}
-                onChange={setFacebookCopy}
-                onReasonChange={setFacebookReason}
-              />
-              <PlatformEditor
-                label="Instagram"
-                value={instagramCopy}
-                draft={instagramDraft}
-                editReason={instagramReason}
-                onChange={setInstagramCopy}
-                onReasonChange={setInstagramReason}
-              />
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                  Suggested Copy
+                </span>
+                <textarea
+                  className="mt-2 min-h-44 w-full resize-y rounded-md border border-stone-300 bg-stone-50 p-3 text-sm leading-6 text-stone-700 outline-none"
+                  value={suggestedCopy}
+                  readOnly
+                  placeholder="Generate copy to see the suggested text here."
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+                  Revised -&gt; Approved Copy
+                </span>
+                <textarea
+                  className="mt-2 min-h-56 w-full resize-y rounded-md border border-stone-300 bg-white p-3 text-sm leading-6 text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                  value={revisedCopy}
+                  onChange={(event) => setRevisedCopy(event.target.value)}
+                  placeholder={
+                    suggestedCopy ||
+                    "The suggested copy will appear here as grey helper text after generation."
+                  }
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-medium text-stone-600">
+                  Edit reason
+                </span>
+                <input
+                  className="mt-1 h-10 w-full rounded-md border border-stone-300 px-3 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+                  placeholder="Optional during the training period"
+                  value={editReason}
+                  onChange={(event) => setEditReason(event.target.value)}
+                />
+              </label>
+
+              <div className="flex justify-end">
+                <button
+                  className="inline-flex h-10 items-center gap-2 rounded-md bg-[#f7a81b] px-4 text-sm font-semibold text-stone-950 transition hover:bg-[#e59a16] disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Finalize owner-approved copy"
+                  onClick={handleFinalize}
+                  disabled={saveStatus === "saving" || !suggestedCopy.trim()}
+                >
+                  <Save size={16} />
+                  {saveStatus === "saving" ? "Saving..." : "Finalize Copy"}
+                </button>
+              </div>
             </div>
           </section>
 
@@ -487,8 +458,8 @@ export function MarketingManager({
               <div>
                 <h2 className="text-lg font-semibold">Learning Records</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Finalized copy stores draft, final text, edit reason, campaign,
-                  content type, subject, platform, and timestamp.
+                  Finalized copy stores suggested text, revised approved text,
+                  edit reason, campaign, content type, subject, and timestamp.
                 </p>
               </div>
               <Badge tone={records.length ? "good" : "neutral"}>
@@ -516,7 +487,7 @@ export function MarketingManager({
                 <table className="w-full border-collapse text-left text-sm">
                   <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                     <tr>
-                      <th className="px-3 py-2">Platform</th>
+                      <th className="px-3 py-2">Record</th>
                       <th className="px-3 py-2">Subject</th>
                       <th className="px-3 py-2">Content type</th>
                       <th className="px-3 py-2">Edit reason</th>
