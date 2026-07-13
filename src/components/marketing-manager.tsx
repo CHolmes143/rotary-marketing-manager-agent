@@ -52,6 +52,61 @@ function Badge({
   );
 }
 
+function PlatformCopyApproval({
+  platform,
+  suggestedCopy,
+  revisedCopy,
+  onRevisedCopyChange,
+}: {
+  platform: "Facebook" | "Instagram";
+  suggestedCopy: string;
+  revisedCopy: string;
+  onRevisedCopyChange: (value: string) => void;
+}) {
+  return (
+    <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-stone-950">{platform}</h3>
+          <p className="text-xs text-stone-500">
+            Suggested copy with revised approved copy underneath
+          </p>
+        </div>
+        <Badge tone={revisedCopy.trim() ? "blue" : "neutral"}>
+          {revisedCopy.trim() ? "Owner revised" : "Suggested"}
+        </Badge>
+      </div>
+
+      <label className="block">
+        <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+          {platform} Suggested Copy
+        </span>
+        <textarea
+          className="mt-2 min-h-40 w-full resize-y rounded-md border border-stone-300 bg-stone-50 p-3 text-sm leading-6 text-stone-700 outline-none"
+          value={suggestedCopy}
+          readOnly
+          placeholder={`Generate copy to see the ${platform} suggestion here.`}
+        />
+      </label>
+
+      <label className="mt-4 block">
+        <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
+          {platform} Revised -&gt; Approved Copy
+        </span>
+        <textarea
+          className="mt-2 min-h-48 w-full resize-y rounded-md border border-stone-300 bg-white p-3 text-sm leading-6 text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
+          value={revisedCopy}
+          onChange={(event) => onRevisedCopyChange(event.target.value)}
+          placeholder={
+            suggestedCopy ||
+            `The ${platform} suggested copy will appear here as grey helper text after generation.`
+          }
+        />
+      </label>
+    </section>
+  );
+}
+
 export function MarketingManager({
   initialRecords,
 }: {
@@ -66,8 +121,10 @@ export function MarketingManager({
     "none",
   );
   const [contentType, setContentType] = useState("Sponsor recruitment");
-  const [suggestedCopy, setSuggestedCopy] = useState("");
-  const [revisedCopy, setRevisedCopy] = useState("");
+  const [facebookSuggestedCopy, setFacebookSuggestedCopy] = useState("");
+  const [facebookRevisedCopy, setFacebookRevisedCopy] = useState("");
+  const [instagramSuggestedCopy, setInstagramSuggestedCopy] = useState("");
+  const [instagramRevisedCopy, setInstagramRevisedCopy] = useState("");
   const [editReason, setEditReason] = useState("");
   const [records, setRecords] = useState<LearningRecordView[]>(initialRecords);
   const [saveStatus, setSaveStatus] = useState<
@@ -83,13 +140,15 @@ export function MarketingManager({
 
   function handleGenerate() {
     const drafts = generatePlatformDrafts(campaign, parseResult, contentType);
-    setSuggestedCopy(drafts.facebook);
-    setRevisedCopy("");
+    setFacebookSuggestedCopy(drafts.facebook);
+    setInstagramSuggestedCopy(drafts.instagram);
+    setFacebookRevisedCopy("");
+    setInstagramRevisedCopy("");
     setEditReason("");
   }
 
   async function handleFinalize() {
-    if (!suggestedCopy.trim()) {
+    if (!facebookSuggestedCopy.trim() || !instagramSuggestedCopy.trim()) {
       return;
     }
 
@@ -104,8 +163,10 @@ export function MarketingManager({
         assetPurpose: parseResult.assetPurpose ?? "Unconfirmed purpose",
         filenameParseStatus: parseResult.status,
         filenameParseWarnings: parseResult.warnings,
-        suggestedCopy,
-        approvedCopy: revisedCopy,
+        facebookSuggestedCopy,
+        facebookApprovedCopy: facebookRevisedCopy,
+        instagramSuggestedCopy,
+        instagramApprovedCopy: instagramRevisedCopy,
         editReason,
       });
 
@@ -124,8 +185,10 @@ export function MarketingManager({
   }
 
   function resetDrafts() {
-    setSuggestedCopy("");
-    setRevisedCopy("");
+    setFacebookSuggestedCopy("");
+    setFacebookRevisedCopy("");
+    setInstagramSuggestedCopy("");
+    setInstagramRevisedCopy("");
     setEditReason("");
   }
 
@@ -385,8 +448,8 @@ export function MarketingManager({
               <div>
                 <h2 className="text-lg font-semibold">Copy Approval</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Generate one strong recommendation, then revise or approve it
-                  for the learning record.
+                  Generate platform-specific recommendations, then revise or
+                  approve them for the learning record.
                 </p>
               </div>
               <button
@@ -400,32 +463,20 @@ export function MarketingManager({
             </div>
 
             <div className="space-y-4">
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                  Suggested Copy
-                </span>
-                <textarea
-                  className="mt-2 min-h-44 w-full resize-y rounded-md border border-stone-300 bg-stone-50 p-3 text-sm leading-6 text-stone-700 outline-none"
-                  value={suggestedCopy}
-                  readOnly
-                  placeholder="Generate copy to see the suggested text here."
+              <div className="grid gap-4 xl:grid-cols-2">
+                <PlatformCopyApproval
+                  platform="Facebook"
+                  suggestedCopy={facebookSuggestedCopy}
+                  revisedCopy={facebookRevisedCopy}
+                  onRevisedCopyChange={setFacebookRevisedCopy}
                 />
-              </label>
-
-              <label className="block">
-                <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-                  Revised -&gt; Approved Copy
-                </span>
-                <textarea
-                  className="mt-2 min-h-56 w-full resize-y rounded-md border border-stone-300 bg-white p-3 text-sm leading-6 text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
-                  value={revisedCopy}
-                  onChange={(event) => setRevisedCopy(event.target.value)}
-                  placeholder={
-                    suggestedCopy ||
-                    "The suggested copy will appear here as grey helper text after generation."
-                  }
+                <PlatformCopyApproval
+                  platform="Instagram"
+                  suggestedCopy={instagramSuggestedCopy}
+                  revisedCopy={instagramRevisedCopy}
+                  onRevisedCopyChange={setInstagramRevisedCopy}
                 />
-              </label>
+              </div>
 
               <label className="block">
                 <span className="text-xs font-medium text-stone-600">
@@ -444,7 +495,11 @@ export function MarketingManager({
                   className="inline-flex h-10 items-center gap-2 rounded-md bg-[#f7a81b] px-4 text-sm font-semibold text-stone-950 transition hover:bg-[#e59a16] disabled:cursor-not-allowed disabled:opacity-60"
                   title="Finalize owner-approved copy"
                   onClick={handleFinalize}
-                  disabled={saveStatus === "saving" || !suggestedCopy.trim()}
+                  disabled={
+                    saveStatus === "saving" ||
+                    !facebookSuggestedCopy.trim() ||
+                    !instagramSuggestedCopy.trim()
+                  }
                 >
                   <Save size={16} />
                   {saveStatus === "saving" ? "Saving..." : "Finalize Copy"}
@@ -458,8 +513,9 @@ export function MarketingManager({
               <div>
                 <h2 className="text-lg font-semibold">Learning Records</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Finalized copy stores suggested text, revised approved text,
-                  edit reason, campaign, content type, subject, and timestamp.
+                  Finalized copy stores platform-specific suggested text,
+                  revised approved text, edit reason, campaign, content type,
+                  subject, and timestamp.
                 </p>
               </div>
               <Badge tone={records.length ? "good" : "neutral"}>

@@ -26,8 +26,10 @@ export type FinalizeCopyInput = {
   assetPurpose: string;
   filenameParseStatus: "matched" | "partial" | "invalid";
   filenameParseWarnings: string[];
-  suggestedCopy: string;
-  approvedCopy: string;
+  facebookSuggestedCopy: string;
+  facebookApprovedCopy: string;
+  instagramSuggestedCopy: string;
+  instagramApprovedCopy: string;
   editReason: string;
 };
 
@@ -152,7 +154,7 @@ export async function getLearningRecords(): Promise<LearningRecordView[]> {
 
   return records.map((record) => ({
     id: record.id,
-    platform: "Approved Copy",
+    platform: record.platform === "facebook" ? "Facebook" : "Instagram",
     contentType: record.contentType?.name ?? "Unconfirmed content type",
     subject: record.subject ?? "Unconfirmed subject",
     aiDraft: record.aiDraft,
@@ -163,9 +165,17 @@ export async function getLearningRecords(): Promise<LearningRecordView[]> {
 }
 
 export async function saveFinalizedCopy(input: FinalizeCopyInput) {
-  const finalCopy = input.approvedCopy.trim() || input.suggestedCopy.trim();
+  const facebookFinalCopy =
+    input.facebookApprovedCopy.trim() || input.facebookSuggestedCopy.trim();
+  const instagramFinalCopy =
+    input.instagramApprovedCopy.trim() || input.instagramSuggestedCopy.trim();
 
-  if (!input.suggestedCopy.trim() || !finalCopy) {
+  if (
+    !input.facebookSuggestedCopy.trim() ||
+    !input.instagramSuggestedCopy.trim() ||
+    !facebookFinalCopy ||
+    !instagramFinalCopy
+  ) {
     return { ok: false, records: await getLearningRecords() };
   }
 
@@ -173,16 +183,28 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
 
   if (!prisma) {
     const timestamp = formatDate(new Date());
-    fallbackRecords.unshift({
-      id: crypto.randomUUID(),
-      platform: "Approved Copy",
-      contentType: input.contentType,
-      subject: input.subject,
-      aiDraft: input.suggestedCopy,
-      finalCopy,
-      editReason: input.editReason,
-      finalizedAt: timestamp,
-    });
+    fallbackRecords.unshift(
+      {
+        id: crypto.randomUUID(),
+        platform: "Instagram",
+        contentType: input.contentType,
+        subject: input.subject,
+        aiDraft: input.instagramSuggestedCopy,
+        finalCopy: instagramFinalCopy,
+        editReason: input.editReason,
+        finalizedAt: timestamp,
+      },
+      {
+        id: crypto.randomUUID(),
+        platform: "Facebook",
+        contentType: input.contentType,
+        subject: input.subject,
+        aiDraft: input.facebookSuggestedCopy,
+        finalCopy: facebookFinalCopy,
+        editReason: input.editReason,
+        finalizedAt: timestamp,
+      },
+    );
 
     revalidatePath("/");
     return { ok: true, records: fallbackRecords };
@@ -251,9 +273,17 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         create: [
           {
             platform: "facebook",
-            aiDraft: input.suggestedCopy,
-            currentEditableCopy: finalCopy,
-            finalCopy,
+            aiDraft: input.facebookSuggestedCopy,
+            currentEditableCopy: facebookFinalCopy,
+            finalCopy: facebookFinalCopy,
+            editReason: input.editReason || null,
+            finalizedAt: new Date(),
+          },
+          {
+            platform: "instagram",
+            aiDraft: input.instagramSuggestedCopy,
+            currentEditableCopy: instagramFinalCopy,
+            finalCopy: instagramFinalCopy,
             editReason: input.editReason || null,
             finalizedAt: new Date(),
           },
@@ -271,8 +301,21 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         platform: "facebook",
         subject: input.subject,
         objective: input.assetPurpose,
-        aiDraft: input.suggestedCopy,
-        finalCopy,
+        aiDraft: input.facebookSuggestedCopy,
+        finalCopy: facebookFinalCopy,
+        editReason: input.editReason || null,
+        patternScope: "platform",
+        rationale: `GeneratedCopySet ${copySet.id}`,
+      },
+      {
+        campaignId: campaign.id,
+        contentTypeId: contentType.id,
+        creativeAssetId: asset.id,
+        platform: "instagram",
+        subject: input.subject,
+        objective: input.assetPurpose,
+        aiDraft: input.instagramSuggestedCopy,
+        finalCopy: instagramFinalCopy,
         editReason: input.editReason || null,
         patternScope: "platform",
         rationale: `GeneratedCopySet ${copySet.id}`,
