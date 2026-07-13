@@ -10,7 +10,6 @@ import {
   Info,
   RotateCcw,
   Save,
-  Sparkles,
   Upload,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -120,6 +119,7 @@ export function MarketingManager({
   const [assetKind, setAssetKind] = useState<"image" | "video" | "none">(
     "none",
   );
+  const [hasUploadedCreative, setHasUploadedCreative] = useState(false);
   const [contentType, setContentType] = useState("Sponsor recruitment");
   const [facebookSuggestedCopy, setFacebookSuggestedCopy] = useState("");
   const [facebookRevisedCopy, setFacebookRevisedCopy] = useState("");
@@ -138,8 +138,13 @@ export function MarketingManager({
 
   const allContentTypes = contentTaxonomy.flatMap((group) => group.items);
 
-  function handleGenerate() {
-    const drafts = generatePlatformDrafts(campaign, parseResult, contentType);
+  function generateCopyForContext(nextFilename: string, nextContentType: string) {
+    const nextParseResult = parseCreativeFilename(nextFilename, campaign.name);
+    const drafts = generatePlatformDrafts(
+      campaign,
+      nextParseResult,
+      nextContentType,
+    );
     setFacebookSuggestedCopy(drafts.facebook);
     setInstagramSuggestedCopy(drafts.instagram);
     setFacebookRevisedCopy("");
@@ -182,6 +187,22 @@ export function MarketingManager({
     setFilename(file.name);
     setAssetKind(file.type.startsWith("video") ? "video" : "image");
     setAssetUrl(URL.createObjectURL(file));
+    setHasUploadedCreative(true);
+    generateCopyForContext(file.name, contentType);
+  }
+
+  function handleFilenameChange(value: string) {
+    setFilename(value);
+    if (hasUploadedCreative) {
+      generateCopyForContext(value, contentType);
+    }
+  }
+
+  function handleContentTypeChange(value: string) {
+    setContentType(value);
+    if (hasUploadedCreative) {
+      generateCopyForContext(filename, value);
+    }
   }
 
   function resetDrafts() {
@@ -190,6 +211,7 @@ export function MarketingManager({
     setInstagramSuggestedCopy("");
     setInstagramRevisedCopy("");
     setEditReason("");
+    setHasUploadedCreative(false);
   }
 
   const parseTone =
@@ -335,7 +357,9 @@ export function MarketingManager({
                     <input
                       className="mt-1 h-11 w-full rounded-md border border-stone-300 px-3 text-sm text-stone-900 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
                       value={filename}
-                      onChange={(event) => setFilename(event.target.value)}
+                      onChange={(event) =>
+                        handleFilenameChange(event.target.value)
+                      }
                     />
                   </label>
                   <label className="block">
@@ -345,7 +369,9 @@ export function MarketingManager({
                     <select
                       className="mt-1 h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-sm text-stone-900 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
                       value={contentType}
-                      onChange={(event) => setContentType(event.target.value)}
+                      onChange={(event) =>
+                        handleContentTypeChange(event.target.value)
+                      }
                     >
                       {allContentTypes.map((item) => (
                         <option key={item}>{item}</option>
@@ -444,22 +470,15 @@ export function MarketingManager({
           </section>
 
           <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="mb-4">
               <div>
                 <h2 className="text-lg font-semibold">Copy Approval</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Generate platform-specific recommendations, then revise or
-                  approve them for the learning record.
+                  Upload a creative to automatically generate platform-specific
+                  recommendations, then revise or approve them for the learning
+                  record.
                 </p>
               </div>
-              <button
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#17458f] px-4 text-sm font-semibold text-white transition hover:bg-[#123a78]"
-                title="Generate suggested copy"
-                onClick={handleGenerate}
-              >
-                <Sparkles size={16} />
-                Generate Copy
-              </button>
             </div>
 
             <div className="space-y-4">
@@ -535,8 +554,8 @@ export function MarketingManager({
             ) : null}
             {records.length === 0 ? (
               <div className="rounded-md border border-stone-200 bg-stone-50 p-5 text-sm text-stone-600">
-                No finalized records yet. Generate copy, make any edits, then
-                select Update Finalized Copy.
+                No finalized records yet. Upload a creative, make any edits,
+                then select Finalize Copy.
               </div>
             ) : (
               <div className="overflow-hidden rounded-md border border-stone-200">
