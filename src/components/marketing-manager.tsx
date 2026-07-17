@@ -327,16 +327,16 @@ export function MarketingManager({
                       Creative Upload and Context
                     </h2>
                     <p className="mt-1 text-sm text-stone-600">
-                      Use Campaign_ContentType_Subject_AssetPurpose_Version.
-                      The app flags uncertainty before copy is generated.
+                      The agent reads whatever filename is uploaded and makes
+                      the strongest draft it can from the available context.
                     </p>
                   </div>
                   <Badge tone={parseTone}>
                     {parseResult.status === "matched"
                       ? "Filename matched"
                       : parseResult.status === "partial"
-                        ? "Review filename"
-                        : "Needs correction"}
+                        ? "Best effort"
+                        : "Needs more context"}
                   </Badge>
                 </div>
 
@@ -359,7 +359,7 @@ export function MarketingManager({
                   <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
                     <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-950">
                       <Info size={16} />
-                      Filename review
+                      Filename context
                     </div>
                     <ul className="space-y-1 text-sm text-amber-900">
                       {parseResult.warnings.map((warning) => (
@@ -370,7 +370,7 @@ export function MarketingManager({
                 ) : (
                   <div className="mt-4 flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">
                     <Check size={16} />
-                    Filename metadata is ready for generation.
+                    Filename context is ready for generation.
                   </div>
                 )}
               </div>

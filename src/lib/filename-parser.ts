@@ -48,7 +48,7 @@ function parseFlexibleFilename(
   selectedCampaignName: string,
 ): FilenameParseResult {
   const warnings = [
-    "Filename is missing the full Campaign_ContentType_Subject_AssetPurpose_Version pattern; using the selected campaign and available filename details.",
+    "Filename does not use the full naming pattern, so the agent will make a best-effort draft using the selected campaign and available filename details.",
   ];
   const versionCandidate = segments.at(-1);
   const version = /^v\d+$/i.test(versionCandidate ?? "")
@@ -67,12 +67,8 @@ function parseFlexibleFilename(
   const subject = descriptiveSegments[0];
   const purposeSegments = descriptiveSegments.slice(1);
 
-  if (!version) {
-    warnings.push("Missing version segment.");
-  }
-
   if (!subject) {
-    warnings.push("Missing subject segment.");
+    warnings.push("Add a few descriptive words to the filename for stronger copy.");
   }
 
   return {
