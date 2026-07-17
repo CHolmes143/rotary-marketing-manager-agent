@@ -56,7 +56,7 @@ export function generatePlatformDrafts(
 
   return {
     facebook: [
-      `${eventName}: ${subject}`,
+      `There is a place for ${audience} at ${eventName}.`,
       "",
       `This ${contentType?.toLowerCase() ?? "campaign"} message is for ${audience}, with a focus on ${purpose.toLowerCase()}.`,
       "",
@@ -69,7 +69,7 @@ export function generatePlatformDrafts(
       "Follow Rotary Club of Dripping Springs for official updates and ways to get involved.",
     ].join("\n"),
     instagram: [
-      `${eventName}: ${subject}`,
+      `Community comes together at ${eventName}.`,
       "",
       `Family-focused, community-powered, and rooted in local impact. This ${contentType?.toLowerCase() ?? "update"} helps connect ${audience} with the purpose behind the rodeo.`,
       "",
