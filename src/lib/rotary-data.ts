@@ -32,8 +32,11 @@ export type TrainingSource = {
   sourceType: "google_drive_doc" | "uploaded_file" | "manual_note";
   scope: "campaign" | "rotary_wide";
   status: "pending_ingestion" | "ingested" | "archived";
+  sourceUrl?: string;
   accessNote: string;
   capturedFrom: string;
+  extractedText?: string;
+  summary?: string;
 };
 
 export const contentTaxonomy: ContentTypeGroup[] = [
@@ -168,7 +171,34 @@ export const campaigns: Campaign[] = [
         category: "beneficiary",
         label: "Beneficiary",
         value:
-          "Funds support Rotary Club of Dripping Springs community service and scholarship efforts.",
+          "Funds raised benefit the Dripping Springs High School Scholarship Fund and support local students through scholarships.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-purpose",
+        category: "event_identity",
+        label: "Event purpose",
+        value:
+          "Bring families and the Rotary Club of Dripping Springs together, increase community awareness of Rotary, and raise funds for the Dripping Springs High School Scholarship Fund.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-primary-objectives",
+        category: "other",
+        label: "Primary objectives",
+        value:
+          "Raise scholarship funds, increase awareness of Rotary Club of Dripping Springs, create a fun family-focused community event, and encourage long-term community involvement with Rotary.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-target-audiences",
+        category: "audience",
+        label: "Target audiences",
+        value:
+          "Event attendees and local families; sponsors and prospective sponsors; vendors and prospective vendors; Stick Horse Showdown participants; silent auction donors; Rotary supporters and boosters; event volunteers; scholarship supporters; thank-you and recognition audiences.",
         status: "approved",
         stability: "annual_review",
       },
@@ -201,7 +231,34 @@ export const campaigns: Campaign[] = [
         category: "voice",
         label: "Brand voice",
         value:
-          "Warm, civic-minded, clear, and community-first. Avoid pressure-heavy sales language.",
+          "Polished, professional, friendly, approachable, family-oriented, community-focused, welcoming rather than sales-heavy, positive, energetic, and authentic.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-core-messaging",
+        category: "voice",
+        label: "Core messaging",
+        value:
+          "When appropriate, reinforce that the event benefits the Dripping Springs High School Scholarship Fund, supports local students through scholarships, is hosted by Rotary Club of Dripping Springs, and succeeds because families, businesses, and community members participate.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-reference-website",
+        category: "cta",
+        label: "Reference website",
+        value:
+          "Use https://backtoschoolrodeo.com as the primary public reference for established tone, messaging style, and branding.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-agent-guidance",
+        category: "voice",
+        label: "Agent guidance",
+        value:
+          "Identify the audience first and tailor messaging accordingly. Avoid overly corporate language or aggressive sales tactics. Focus on community, participation, generosity, and positive local impact.",
         status: "approved",
         stability: "permanent",
       },
@@ -222,14 +279,20 @@ export const trainingSources: TrainingSource[] = [
   {
     id: "source-rotary-rodeo-brand-voice",
     campaignSlug: "back-to-school-rotary-rodeo",
-    title: "Rotary Rodeo Brand Voice",
-    sourceType: "google_drive_doc",
+    title: "Rotary Rodeo Marketing Agent Brand Foundation Phase 1",
+    sourceType: "uploaded_file",
     scope: "campaign",
-    status: "pending_ingestion",
+    status: "ingested",
+    sourceUrl:
+      "file:/Users/carissaholmes/Downloads/Rotary_Rodeo_Marketing_Agent_Brand_Foundation_Phase1.docx",
     accessNote:
-      "Captured from Google Drive share dialog. The document is link-viewable, but text/link still needs to be ingested before it can guide generation.",
+      "Brand foundation document supplied by owner and ingested into Phase 1 campaign knowledge.",
     capturedFrom:
-      "Google Drive > Rotary Workforce > Content Team screenshot, July 13, 2026",
+      "Local DOCX upload, July 17, 2026",
+    summary:
+      "Defines purpose, objectives, target audiences, brand voice, core messaging, website reference, channels, and agent guidance for Back to School Rotary Rodeo marketing.",
+    extractedText:
+      "Purpose: bring families and Rotary Club of Dripping Springs together, increase community awareness of Rotary, and raise funds for the Dripping Springs High School Scholarship Fund. Primary objectives: raise scholarship funds, increase Rotary awareness, create a fun family-focused community event, and encourage long-term community involvement. Target audiences: event attendees and local families; sponsors and prospective sponsors; vendors and prospective vendors; Stick Horse Showdown participants; silent auction donors; Rotary supporters and boosters; event volunteers; scholarship supporters; thank-you and recognition posts. Brand voice: polished, professional, friendly, approachable, family-oriented, community-focused, welcoming rather than sales-heavy, positive, energetic, and authentic. Core messaging: event benefits the Dripping Springs High School Scholarship Fund; funds raised support local students through scholarships; event is hosted by Rotary Club of Dripping Springs; families, businesses, and community members all help make the event successful. Reference website: https://backtoschoolrodeo.com. Marketing channels: Facebook and Instagram. Agent guidance: identify the audience first and tailor messaging accordingly while staying consistent with brand voice; avoid overly corporate language or aggressive sales tactics; focus on community, participation, generosity, and positive local impact.",
   },
 ];
 

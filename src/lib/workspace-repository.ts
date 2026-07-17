@@ -105,8 +105,11 @@ export async function ensureSeedData() {
           sourceType: source.sourceType,
           scope: source.scope,
           status: source.status,
+          sourceUrl: source.sourceUrl,
           capturedFrom: source.capturedFrom,
           accessNote: source.accessNote,
+          extractedText: source.extractedText,
+          summary: source.summary,
         },
         update: {
           campaignId: dbCampaign.id,
@@ -114,8 +117,11 @@ export async function ensureSeedData() {
           sourceType: source.sourceType,
           scope: source.scope,
           status: source.status,
+          sourceUrl: source.sourceUrl,
           capturedFrom: source.capturedFrom,
           accessNote: source.accessNote,
+          extractedText: source.extractedText,
+          summary: source.summary,
         },
       });
     }

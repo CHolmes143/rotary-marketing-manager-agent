@@ -66,8 +66,11 @@ async function main() {
           sourceType: source.sourceType,
           scope: source.scope,
           status: source.status,
+          sourceUrl: source.sourceUrl,
           capturedFrom: source.capturedFrom,
           accessNote: source.accessNote,
+          extractedText: source.extractedText,
+          summary: source.summary,
         },
         update: {
           campaignId: dbCampaign.id,
@@ -75,8 +78,11 @@ async function main() {
           sourceType: source.sourceType,
           scope: source.scope,
           status: source.status,
+          sourceUrl: source.sourceUrl,
           capturedFrom: source.capturedFrom,
           accessNote: source.accessNote,
+          extractedText: source.extractedText,
+          summary: source.summary,
         },
       });
     }

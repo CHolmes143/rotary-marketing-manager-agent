@@ -11,6 +11,29 @@ function factValue(campaign: Campaign, category: string) {
     ?.value;
 }
 
+function factLabelValue(campaign: Campaign, label: string) {
+  return approvedFacts(campaign).find((fact) => fact.label === label)?.value;
+}
+
+function audienceCue(contentType: string | undefined, subject: string) {
+  const value = `${contentType ?? ""} ${subject}`.toLowerCase();
+
+  if (value.includes("sponsor")) return "local businesses and sponsors";
+  if (value.includes("vendor")) return "vendors and community partners";
+  if (value.includes("auction") || value.includes("donor")) {
+    return "silent auction donors and scholarship supporters";
+  }
+  if (value.includes("volunteer")) return "event volunteers";
+  if (value.includes("participant") || value.includes("stick horse")) {
+    return "Stick Horse Showdown participants and families";
+  }
+  if (value.includes("thank") || value.includes("recognition")) {
+    return "supporters, sponsors, volunteers, and community members";
+  }
+
+  return "local families and community members";
+}
+
 export function generatePlatformDrafts(
   campaign: Campaign,
   parseResult: FilenameParseResult,
@@ -20,28 +43,39 @@ export function generatePlatformDrafts(
   const beneficiary =
     factValue(campaign, "beneficiary") ??
     "Rotary Club of Dripping Springs community service efforts.";
+  const purposeFact =
+    factLabelValue(campaign, "Event purpose") ??
+    "bring families and Rotary together around community impact.";
+  const coreMessaging =
+    factLabelValue(campaign, "Core messaging") ??
+    "The event is hosted by Rotary Club of Dripping Springs and supports local impact.";
   const subject = parseResult.subject ?? "this Rotary update";
   const purpose = parseResult.assetPurpose ?? "community awareness";
   const contentType = confirmedContentType || parseResult.contentType;
+  const audience = audienceCue(contentType, subject);
 
   return {
     facebook: [
-      `${eventName} update: ${subject}`,
+      `${eventName}: ${subject}`,
       "",
-      `We are sharing this ${contentType?.toLowerCase() ?? "campaign"} post as part of our ${purpose.toLowerCase()} efforts for the Rotary Club of Dripping Springs.`,
+      `This ${contentType?.toLowerCase() ?? "campaign"} message is for ${audience}, with a focus on ${purpose.toLowerCase()}.`,
+      "",
+      `The heart of the event is simple: ${purposeFact}`,
       "",
       beneficiary,
       "",
-      "Follow along for official Rotary updates, details, and ways to get involved.",
+      coreMessaging,
+      "",
+      "Follow Rotary Club of Dripping Springs for official updates and ways to get involved.",
     ].join("\n"),
     instagram: [
       `${eventName}: ${subject}`,
       "",
-      `Community, service, and a little extra Rotary energy for ${purpose.toLowerCase()}.`,
+      `Family-focused, community-powered, and rooted in local impact. This ${contentType?.toLowerCase() ?? "update"} helps connect ${audience} with the purpose behind the rodeo.`,
       "",
-      "Follow Rotary Club of Dripping Springs for official updates.",
+      "Funds raised benefit the Dripping Springs High School Scholarship Fund.",
       "",
-      "#DrippingSprings #RotaryClub #CommunityService",
+      "#DrippingSprings #RotaryClub #BackToSchoolRodeo #CommunityImpact",
     ].join("\n"),
   };
 }
