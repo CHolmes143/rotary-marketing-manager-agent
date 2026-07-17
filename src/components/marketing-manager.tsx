@@ -355,27 +355,6 @@ export function MarketingManager({
                   </label>
                 </div>
 
-                <div className="mt-4 grid gap-3 md:grid-cols-4">
-                  {[
-                    ["Campaign", parseResult.campaign ?? "Unconfirmed"],
-                    ["Content type", parseResult.contentType ?? "Unconfirmed"],
-                    ["Subject", parseResult.subject ?? "Unconfirmed"],
-                    ["Purpose", parseResult.assetPurpose ?? "Unconfirmed"],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="rounded-md border border-stone-200 bg-stone-50 p-3"
-                    >
-                      <p className="text-xs font-medium text-stone-500">
-                        {label}
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-stone-900">
-                        {value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
                 {parseResult.warnings.length > 0 ? (
                   <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
                     <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-amber-950">
