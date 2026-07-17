@@ -249,9 +249,18 @@ export const campaigns: Campaign[] = [
         category: "cta",
         label: "Reference website",
         value:
-          "Use https://backtoschoolrodeo.com as the primary public reference for established tone, messaging style, and branding.",
+          "Use BackToSchoolRodeo as the preferred public-facing event site wording. Use https://backtoschoolrodeo.com only as an internal reference for established tone, messaging style, and branding.",
         status: "approved",
         stability: "annual_review",
+      },
+      {
+        id: "fact-site-terminology",
+        category: "terminology",
+        label: "Event site wording",
+        value:
+          "When the event site is provided in copy, write it as BackToSchoolRodeo.",
+        status: "approved",
+        stability: "permanent",
       },
       {
         id: "fact-agent-guidance",
@@ -292,7 +301,7 @@ export const trainingSources: TrainingSource[] = [
     summary:
       "Defines purpose, objectives, target audiences, brand voice, core messaging, website reference, channels, and agent guidance for Back to School Rotary Rodeo marketing.",
     extractedText:
-      "Purpose: bring families and Rotary Club of Dripping Springs together, increase community awareness of Rotary, and raise funds for the Dripping Springs High School Scholarship Fund. Primary objectives: raise scholarship funds, increase Rotary awareness, create a fun family-focused community event, and encourage long-term community involvement. Target audiences: event attendees and local families; sponsors and prospective sponsors; vendors and prospective vendors; Stick Horse Showdown participants; silent auction donors; Rotary supporters and boosters; event volunteers; scholarship supporters; thank-you and recognition posts. Brand voice: polished, professional, friendly, approachable, family-oriented, community-focused, welcoming rather than sales-heavy, positive, energetic, and authentic. Core messaging: event benefits the Dripping Springs High School Scholarship Fund; funds raised support local students through scholarships; event is hosted by Rotary Club of Dripping Springs; families, businesses, and community members all help make the event successful. Reference website: https://backtoschoolrodeo.com. Marketing channels: Facebook and Instagram. Agent guidance: identify the audience first and tailor messaging accordingly while staying consistent with brand voice; avoid overly corporate language or aggressive sales tactics; focus on community, participation, generosity, and positive local impact.",
+      "Purpose: bring families and Rotary Club of Dripping Springs together, increase community awareness of Rotary, and raise funds for the Dripping Springs High School Scholarship Fund. Primary objectives: raise scholarship funds, increase Rotary awareness, create a fun family-focused community event, and encourage long-term community involvement. Target audiences: event attendees and local families; sponsors and prospective sponsors; vendors and prospective vendors; Stick Horse Showdown participants; silent auction donors; Rotary supporters and boosters; event volunteers; scholarship supporters; thank-you and recognition posts. Brand voice: polished, professional, friendly, approachable, family-oriented, community-focused, welcoming rather than sales-heavy, positive, energetic, and authentic. Core messaging: event benefits the Dripping Springs High School Scholarship Fund; funds raised support local students through scholarships; event is hosted by Rotary Club of Dripping Springs; families, businesses, and community members all help make the event successful. Reference website: https://backtoschoolrodeo.com. Public event site wording: BackToSchoolRodeo. Marketing channels: Facebook and Instagram. Agent guidance: identify the audience first and tailor messaging accordingly while staying consistent with brand voice; avoid overly corporate language or aggressive sales tactics; focus on community, participation, generosity, and positive local impact.",
   },
 ];
 

@@ -54,6 +54,12 @@ function audienceCue(contentType: string | undefined, subject: string) {
   return "local families and community members";
 }
 
+function applyTerminologyRules(copy: string) {
+  return copy
+    .replace(/https?:\/\/(?:www\.)?backtoschoolrodeo\.com\/?/gi, "BackToSchoolRodeo")
+    .replace(/\bBack to School Rodeo\b/g, "BackToSchoolRodeo");
+}
+
 export function generatePlatformDrafts(
   campaign: Campaign,
   parseResult: FilenameParseResult,
@@ -72,8 +78,7 @@ export function generatePlatformDrafts(
   const audience = audienceCue(contentType, subject);
   const impactLine = scholarshipImpactLine(audience);
 
-  return {
-    facebook: [
+  const facebook = [
       `There is a place for ${audience} at ${eventName}.`,
       "",
       `This ${contentType?.toLowerCase() ?? "campaign"} message is for ${audience}, with a focus on ${purpose.toLowerCase()}.`,
@@ -85,8 +90,8 @@ export function generatePlatformDrafts(
       impactLine,
       "",
       "Follow Rotary Club of Dripping Springs for official updates and ways to get involved.",
-    ].join("\n"),
-    instagram: [
+    ].join("\n");
+  const instagram = [
       `Community comes together at ${eventName}.`,
       "",
       `Family-focused, community-powered, and rooted in local impact. This ${contentType?.toLowerCase() ?? "update"} helps connect ${audience} with the purpose behind the rodeo.`,
@@ -94,6 +99,10 @@ export function generatePlatformDrafts(
       "Funds raised benefit the Dripping Springs High School Scholarship Fund.",
       "",
       "#DrippingSprings #RotaryClub #BackToSchoolRodeo #CommunityImpact",
-    ].join("\n"),
+    ].join("\n");
+
+  return {
+    facebook: applyTerminologyRules(facebook),
+    instagram: applyTerminologyRules(instagram),
   };
 }
