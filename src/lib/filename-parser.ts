@@ -29,6 +29,66 @@ function humanizeSegment(segment: string) {
     .trim();
 }
 
+function getCampaign(segment: string | undefined) {
+  const normalizedCampaign = segment ? normalizeToken(segment) : "";
+
+  return (
+    campaignAliases.get(normalizedCampaign) ??
+    campaigns.find((item) => normalizeToken(item.name) === normalizedCampaign)
+      ?.name
+  );
+}
+
+function getContentType(segment: string | undefined) {
+  return segment ? contentTypeAliases.get(normalizeToken(segment)) : undefined;
+}
+
+function parseFlexibleFilename(
+  segments: string[],
+  selectedCampaignName: string,
+): FilenameParseResult {
+  const warnings = [
+    "Filename is missing the full Campaign_ContentType_Subject_AssetPurpose_Version pattern; using the selected campaign and available filename details.",
+  ];
+  const versionCandidate = segments.at(-1);
+  const version = /^v\d+$/i.test(versionCandidate ?? "")
+    ? versionCandidate
+    : undefined;
+  const workingSegments = version ? segments.slice(0, -1) : segments;
+  const explicitCampaign = getCampaign(workingSegments[0]);
+  const contentTypeIndex = workingSegments.findIndex((segment) =>
+    Boolean(getContentType(segment)),
+  );
+  const contentType =
+    contentTypeIndex >= 0 ? getContentType(workingSegments[contentTypeIndex]) : undefined;
+  const descriptiveSegments = workingSegments.filter(
+    (_, index) => index !== contentTypeIndex && !(explicitCampaign && index === 0),
+  );
+  const subject = descriptiveSegments[0];
+  const purposeSegments = descriptiveSegments.slice(1);
+
+  if (!version) {
+    warnings.push("Missing version segment.");
+  }
+
+  if (!subject) {
+    warnings.push("Missing subject segment.");
+  }
+
+  return {
+    status: subject ? "partial" : "invalid",
+    campaign: explicitCampaign ?? selectedCampaignName,
+    contentType,
+    subject: subject ? humanizeSegment(subject) : undefined,
+    assetPurpose:
+      purposeSegments.length > 0
+        ? humanizeSegment(purposeSegments.join(" "))
+        : undefined,
+    version,
+    warnings,
+  };
+}
+
 export function parseCreativeFilename(
   filename: string,
   selectedCampaignName: string,
@@ -41,24 +101,16 @@ export function parseCreativeFilename(
   }
 
   const segments = stripExtension(filename).split("_").filter(Boolean);
-  const warnings: string[] = [];
 
   if (segments.length !== 5) {
-    warnings.push(
-      `Expected 5 filename segments, found ${segments.length}. Use Campaign_ContentType_Subject_AssetPurpose_Version.`,
-    );
+    return parseFlexibleFilename(segments, selectedCampaignName);
   }
 
+  const warnings: string[] = [];
   const [campaignSegment, contentTypeSegment, subject, assetPurpose, version] =
     segments;
 
-  const normalizedCampaign = campaignSegment
-    ? normalizeToken(campaignSegment)
-    : "";
-  const campaign =
-    campaignAliases.get(normalizedCampaign) ??
-    campaigns.find((item) => normalizeToken(item.name) === normalizedCampaign)
-      ?.name;
+  const campaign = getCampaign(campaignSegment);
 
   if (!campaignSegment) {
     warnings.push("Missing campaign segment.");
@@ -70,9 +122,7 @@ export function parseCreativeFilename(
     );
   }
 
-  const contentType = contentTypeSegment
-    ? contentTypeAliases.get(normalizeToken(contentTypeSegment))
-    : undefined;
+  const contentType = getContentType(contentTypeSegment);
 
   if (!contentTypeSegment) {
     warnings.push("Missing content type segment.");
