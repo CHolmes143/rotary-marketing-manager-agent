@@ -144,7 +144,20 @@ export async function getLearningRecords(): Promise<LearningRecordView[]> {
   const prisma = getPrisma();
   if (!prisma) return fallbackRecords;
 
-  await ensureSeedData();
+  try {
+    await ensureSeedData();
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2021"
+    ) {
+      return fallbackRecords;
+    }
+
+    throw error;
+  }
 
   const records = await prisma.learningRecord.findMany({
     orderBy: { createdAt: "desc" },

@@ -1,6 +1,6 @@
 # Infrastructure Status
 
-Date: July 13, 2026
+Date: July 17, 2026
 
 ## Vercel
 
@@ -22,57 +22,71 @@ Production URL:
 
 Deployment inspected:
 
-- `dpl_DX9KJtvXQNN3X5cuBL7EWqMuTxe9`
+- `dpl_odTFnuZeVpJjCyoGBjQpjTixjqDm`
 - Status: `Ready`
 
 ## Current Environment State
 
-The Vercel project currently has no environment variables configured. The deployed app runs in fallback mode until the dedicated database and blob storage values are added.
+The Vercel project has dedicated database and media storage environment variables configured for Production, Preview, and Development. The deployed app now writes finalized learning records to the Neon Postgres database instead of staying local-only.
 
-Required Vercel environment variables:
+Configured Vercel environment variables:
 
 ```text
-DATABASE_URL=
-BLOB_READ_WRITE_TOKEN=
-AI_API_KEY=
-AI_MODEL_COPY=
-AI_MODEL_VISION=
+DATABASE_URL
+BLOB_READ_WRITE_TOKEN
+ADMIN_BOOTSTRAP_TOKEN
 APP_BASE_URL=https://rotary-marketing-manager-agent.vercel.app
 NEXT_PUBLIC_APP_NAME=Rotary Marketing Manager
 ```
 
-Optional:
+Not configured yet:
 
 ```text
-DIRECT_URL=
+AI_API_KEY
+AI_MODEL_COPY
+AI_MODEL_VISION
 ```
 
 ## Database
 
-Prisma/Postgres persistence is implemented in code, but the dedicated Postgres database has not yet been provisioned in Vercel.
+Dedicated Neon Postgres is provisioned through Vercel Marketplace.
 
-After provisioning Postgres:
+Resource:
 
-1. Add `DATABASE_URL` to Vercel environments.
-2. Pull env locally if needed with `npx vercel env pull`.
-3. Run `npx prisma migrate deploy`.
-4. Run `npm run prisma:seed`.
-5. Redeploy.
+- `rotary-marketing-manager-agent-db`
+
+Bootstrap status:
+
+- Schema created through the protected Vercel bootstrap endpoint.
+- Seed data loaded: 1 campaign, 41 content types, 1 training source.
+- Prisma uses the Postgres driver adapter with `engineType = "client"` to avoid Vercel query-engine binary issues.
 
 ## Blob Storage
 
-Vercel Blob package support is installed and `.env.example` includes `BLOB_READ_WRITE_TOKEN`. The Blob store has not yet been provisioned in Vercel.
+Dedicated Vercel Blob storage is provisioned and connected to the project.
 
-After provisioning Blob:
+Resource:
 
-1. Add `BLOB_READ_WRITE_TOKEN` to Vercel environments.
-2. Replace local upload preview with route-handler or server-action Blob upload.
-3. Store the returned Blob URL and pathname on `CreativeAsset`.
+- `rotary-marketing-manager-agent-media`
+
+Remaining application work:
+
+1. Replace local upload preview with route-handler or server-action Blob upload.
+2. Store the returned Blob URL and pathname on `CreativeAsset`.
+3. Use stored media URLs in generation/media-analysis workflows.
 
 ## GitHub
 
-A local git commit exists:
+Local git history exists, but no GitHub remote is attached yet.
 
-- `5814e63 Build Rotary Marketing Manager phase 1`
+Current blocker:
 
-No GitHub remote is attached yet because this environment does not have the GitHub CLI installed and the available GitHub connector does not expose repository creation. Create the GitHub repo named `rotary-marketing-manager-agent`, then add it as `origin` and push `main`.
+- `https://github.com/carissaholmes/rotary-marketing-manager-agent.git` does not exist yet.
+- This environment does not have the GitHub CLI installed and the available GitHub connector does not expose repository creation.
+
+Next GitHub step:
+
+1. Create the GitHub repo named `rotary-marketing-manager-agent`.
+2. Add it as `origin`.
+3. Push `main`.
+4. Connect the repo to the Vercel project with `npx vercel git connect`.
