@@ -15,6 +15,26 @@ function factLabelValue(campaign: Campaign, label: string) {
   return approvedFacts(campaign).find((fact) => fact.label === label)?.value;
 }
 
+function scholarshipImpactLine(audience: string) {
+  if (audience.includes("sponsor") || audience.includes("business")) {
+    return "Sponsorship helps turn community support into scholarship opportunities for local students.";
+  }
+
+  if (audience.includes("vendor")) {
+    return "Vendor participation helps make the day feel welcoming, local, and full of community energy.";
+  }
+
+  if (audience.includes("donor") || audience.includes("auction")) {
+    return "Every donated item helps build momentum for scholarships that support local students.";
+  }
+
+  if (audience.includes("volunteer")) {
+    return "Volunteer support helps create the kind of event families remember and students benefit from.";
+  }
+
+  return "Every family, business, and community member who shows up helps support scholarships for local students.";
+}
+
 function audienceCue(contentType: string | undefined, subject: string) {
   const value = `${contentType ?? ""} ${subject}`.toLowerCase();
 
@@ -46,13 +66,11 @@ export function generatePlatformDrafts(
   const purposeFact =
     factLabelValue(campaign, "Event purpose") ??
     "bring families and Rotary together around community impact.";
-  const coreMessaging =
-    factLabelValue(campaign, "Core messaging") ??
-    "The event is hosted by Rotary Club of Dripping Springs and supports local impact.";
   const subject = parseResult.subject ?? "this Rotary update";
   const purpose = parseResult.assetPurpose ?? "community awareness";
   const contentType = confirmedContentType || parseResult.contentType;
   const audience = audienceCue(contentType, subject);
+  const impactLine = scholarshipImpactLine(audience);
 
   return {
     facebook: [
@@ -64,7 +82,7 @@ export function generatePlatformDrafts(
       "",
       beneficiary,
       "",
-      coreMessaging,
+      impactLine,
       "",
       "Follow Rotary Club of Dripping Springs for official updates and ways to get involved.",
     ].join("\n"),
