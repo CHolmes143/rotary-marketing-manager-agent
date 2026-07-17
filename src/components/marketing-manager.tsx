@@ -19,7 +19,6 @@ import { parseCreativeFilename } from "@/lib/filename-parser";
 import type { LearningRecordView } from "@/lib/workspace-repository";
 import {
   campaigns,
-  contentTaxonomy,
   draftFacts,
   trainingSources,
   type Campaign,
@@ -120,7 +119,6 @@ export function MarketingManager({
     "none",
   );
   const [hasUploadedCreative, setHasUploadedCreative] = useState(false);
-  const [contentType, setContentType] = useState("Sponsor recruitment");
   const [facebookSuggestedCopy, setFacebookSuggestedCopy] = useState("");
   const [facebookRevisedCopy, setFacebookRevisedCopy] = useState("");
   const [instagramSuggestedCopy, setInstagramSuggestedCopy] = useState("");
@@ -136,14 +134,14 @@ export function MarketingManager({
     [filename, campaign.name],
   );
 
-  const allContentTypes = contentTaxonomy.flatMap((group) => group.items);
+  const parsedContentType = parseResult.contentType ?? "Unconfirmed content type";
 
-  function generateCopyForContext(nextFilename: string, nextContentType: string) {
+  function generateCopyForContext(nextFilename: string) {
     const nextParseResult = parseCreativeFilename(nextFilename, campaign.name);
     const drafts = generatePlatformDrafts(
       campaign,
       nextParseResult,
-      nextContentType,
+      nextParseResult.contentType ?? "Unconfirmed content type",
     );
     setFacebookSuggestedCopy(drafts.facebook);
     setInstagramSuggestedCopy(drafts.instagram);
@@ -163,7 +161,7 @@ export function MarketingManager({
       const result = await finalizeCopy({
         campaignSlug: campaign.slug,
         filename,
-        contentType,
+        contentType: parsedContentType,
         subject: parseResult.subject ?? "Unconfirmed subject",
         assetPurpose: parseResult.assetPurpose ?? "Unconfirmed purpose",
         filenameParseStatus: parseResult.status,
@@ -188,20 +186,13 @@ export function MarketingManager({
     setAssetKind(file.type.startsWith("video") ? "video" : "image");
     setAssetUrl(URL.createObjectURL(file));
     setHasUploadedCreative(true);
-    generateCopyForContext(file.name, contentType);
+    generateCopyForContext(file.name);
   }
 
   function handleFilenameChange(value: string) {
     setFilename(value);
     if (hasUploadedCreative) {
-      generateCopyForContext(value, contentType);
-    }
-  }
-
-  function handleContentTypeChange(value: string) {
-    setContentType(value);
-    if (hasUploadedCreative) {
-      generateCopyForContext(filename, value);
+      generateCopyForContext(value);
     }
   }
 
@@ -349,7 +340,7 @@ export function MarketingManager({
                   </Badge>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4">
                   <label className="block">
                     <span className="text-xs font-medium text-stone-600">
                       Filename
@@ -361,22 +352,6 @@ export function MarketingManager({
                         handleFilenameChange(event.target.value)
                       }
                     />
-                  </label>
-                  <label className="block">
-                    <span className="text-xs font-medium text-stone-600">
-                      Confirmed content type
-                    </span>
-                    <select
-                      className="mt-1 h-11 w-full rounded-md border border-stone-300 bg-white px-3 text-sm text-stone-900 outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
-                      value={contentType}
-                      onChange={(event) =>
-                        handleContentTypeChange(event.target.value)
-                      }
-                    >
-                      {allContentTypes.map((item) => (
-                        <option key={item}>{item}</option>
-                      ))}
-                    </select>
                   </label>
                 </div>
 
