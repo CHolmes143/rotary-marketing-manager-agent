@@ -35,6 +35,12 @@ function scholarshipImpactLine(audience: string) {
   return "Every family, business, and community member who shows up helps support scholarships for local students.";
 }
 
+function cleanContentType(value: string | undefined) {
+  if (!value || /unconfirmed/i.test(value)) return undefined;
+
+  return value;
+}
+
 function audienceCue(contentType: string | undefined, subject: string) {
   const value = `${contentType ?? ""} ${subject}`.toLowerCase();
 
@@ -52,6 +58,32 @@ function audienceCue(contentType: string | undefined, subject: string) {
   }
 
   return "local families and community members";
+}
+
+function creativeGoalLine(audience: string, subject: string, purpose: string) {
+  const value = `${subject} ${purpose}`.toLowerCase();
+
+  if (audience.includes("vendor")) {
+    if (value.includes("open") || value.includes("registration")) {
+      return "Vendor registration is a chance to be part of a family-focused community event with local visibility built in.";
+    }
+
+    return "Vendor participation helps bring local flavor, energy, and connection to the event.";
+  }
+
+  if (audience.includes("sponsor") || audience.includes("business")) {
+    return "Sponsorship is a visible way for local businesses to support students and show up for the community.";
+  }
+
+  if (audience.includes("donor") || audience.includes("auction")) {
+    return "Silent auction support gives the community another meaningful way to contribute to local scholarships.";
+  }
+
+  if (audience.includes("volunteer")) {
+    return "Volunteer support helps make the day organized, welcoming, and memorable for families.";
+  }
+
+  return "The event brings families, businesses, and neighbors together around a shared local purpose.";
 }
 
 function applyTerminologyRules(copy: string) {
@@ -74,14 +106,15 @@ export function generatePlatformDrafts(
     "bring families and Rotary together around community impact.";
   const subject = parseResult.subject ?? "this Rotary update";
   const purpose = parseResult.assetPurpose ?? "community awareness";
-  const contentType = confirmedContentType || parseResult.contentType;
+  const contentType = cleanContentType(confirmedContentType) ?? cleanContentType(parseResult.contentType);
   const audience = audienceCue(contentType, subject);
   const impactLine = scholarshipImpactLine(audience);
+  const goalLine = creativeGoalLine(audience, subject, purpose);
 
   const facebook = [
       `There is a place for ${audience} at ${eventName}.`,
       "",
-      `This ${contentType?.toLowerCase() ?? "campaign"} message is for ${audience}, with a focus on ${purpose.toLowerCase()}.`,
+      goalLine,
       "",
       `The heart of the event is simple: ${purposeFact}`,
       "",
@@ -94,7 +127,7 @@ export function generatePlatformDrafts(
   const instagram = [
       `Community comes together at ${eventName}.`,
       "",
-      `Family-focused, community-powered, and rooted in local impact. This ${contentType?.toLowerCase() ?? "update"} helps connect ${audience} with the purpose behind the rodeo.`,
+      `Family-focused, community-powered, and rooted in local impact. ${goalLine}`,
       "",
       "Funds raised benefit the Dripping Springs High School Scholarship Fund.",
       "",
