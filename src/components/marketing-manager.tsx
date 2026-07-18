@@ -16,7 +16,7 @@ import { useMemo, useState } from "react";
 import { finalizeCopy } from "@/app/actions";
 import { generatePlatformDrafts } from "@/lib/copy-generator";
 import { parseCreativeFilename } from "@/lib/filename-parser";
-import { derivePostType } from "@/lib/post-type";
+import { suitablePostType } from "@/lib/post-type";
 import type { LearningRecordView } from "@/lib/workspace-repository";
 import {
   campaigns,
@@ -51,13 +51,13 @@ function Badge({
   );
 }
 
-function PlatformCopyApproval({
-  platform,
+function PostTypeCopyApproval({
+  postType,
   suggestedCopy,
   revisedCopy,
   onRevisedCopyChange,
 }: {
-  platform: "Facebook" | "Instagram";
+  postType: string;
   suggestedCopy: string;
   revisedCopy: string;
   onRevisedCopyChange: (value: string) => void;
@@ -70,9 +70,11 @@ function PlatformCopyApproval({
     <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-stone-950">{platform}</h3>
+          <h3 className="text-sm font-semibold text-stone-950">
+            {postType} Copy
+          </h3>
           <p className="text-xs text-stone-500">
-            Suggested copy with revised approved copy underneath
+            Suggested copy with editable approved copy underneath
           </p>
         </div>
         <Badge tone={hasOwnerRevision ? "blue" : hasEditableDraft ? "good" : "neutral"}>
@@ -86,25 +88,25 @@ function PlatformCopyApproval({
 
       <label className="block">
         <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-          {platform} Suggested Copy
+          {postType} Suggested Copy
         </span>
         <textarea
           className="mt-2 min-h-40 w-full resize-y rounded-md border border-stone-300 bg-stone-50 p-3 text-sm leading-6 text-stone-700 outline-none"
           value={suggestedCopy}
           readOnly
-          placeholder={`Generate copy to see the ${platform} suggestion here.`}
+          placeholder={`Generate copy to see the ${postType} suggestion here.`}
         />
       </label>
 
       <label className="mt-4 block">
         <span className="text-xs font-semibold uppercase tracking-wide text-stone-500">
-          {platform} Revised -&gt; Approved Copy
+          {postType} Revised -&gt; Approved Copy
         </span>
         <textarea
           className="mt-2 min-h-48 w-full resize-y rounded-md border border-stone-300 bg-white p-3 text-sm leading-6 text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
           value={revisedCopy}
           onChange={(event) => onRevisedCopyChange(event.target.value)}
-          placeholder={`Generate copy to create an editable ${platform} approval draft.`}
+          placeholder={`Generate copy to create an editable ${postType} approval draft.`}
         />
       </label>
     </section>
@@ -125,10 +127,8 @@ export function MarketingManager({
     "none",
   );
   const [hasUploadedCreative, setHasUploadedCreative] = useState(false);
-  const [facebookSuggestedCopy, setFacebookSuggestedCopy] = useState("");
-  const [facebookRevisedCopy, setFacebookRevisedCopy] = useState("");
-  const [instagramSuggestedCopy, setInstagramSuggestedCopy] = useState("");
-  const [instagramRevisedCopy, setInstagramRevisedCopy] = useState("");
+  const [suggestedCopy, setSuggestedCopy] = useState("");
+  const [revisedCopy, setRevisedCopy] = useState("");
   const [editReason, setEditReason] = useState("");
   const [records, setRecords] = useState<LearningRecordView[]>(initialRecords);
   const [saveStatus, setSaveStatus] = useState<
@@ -141,7 +141,7 @@ export function MarketingManager({
   );
 
   const parsedContentType = parseResult.contentType ?? "Unconfirmed content type";
-  const postType = derivePostType(filename, parseResult);
+  const postType = suitablePostType(assetKind, filename, parseResult);
 
   function generateCopyForContext(nextFilename: string) {
     const nextParseResult = parseCreativeFilename(nextFilename, campaign.name);
@@ -151,15 +151,13 @@ export function MarketingManager({
       nextParseResult.contentType ?? "Unconfirmed content type",
     );
     const sharedPostTypeDraft = drafts.facebook;
-    setFacebookSuggestedCopy(sharedPostTypeDraft);
-    setInstagramSuggestedCopy(sharedPostTypeDraft);
-    setFacebookRevisedCopy(sharedPostTypeDraft);
-    setInstagramRevisedCopy(sharedPostTypeDraft);
+    setSuggestedCopy(sharedPostTypeDraft);
+    setRevisedCopy(sharedPostTypeDraft);
     setEditReason("");
   }
 
   async function handleFinalize() {
-    if (!facebookSuggestedCopy.trim() || !instagramSuggestedCopy.trim()) {
+    if (!suggestedCopy.trim()) {
       return;
     }
 
@@ -175,10 +173,10 @@ export function MarketingManager({
         postType,
         filenameParseStatus: parseResult.status,
         filenameParseWarnings: parseResult.warnings,
-        facebookSuggestedCopy,
-        facebookApprovedCopy: facebookRevisedCopy,
-        instagramSuggestedCopy,
-        instagramApprovedCopy: instagramRevisedCopy,
+        facebookSuggestedCopy: suggestedCopy,
+        facebookApprovedCopy: revisedCopy,
+        instagramSuggestedCopy: suggestedCopy,
+        instagramApprovedCopy: revisedCopy,
         editReason,
       });
 
@@ -206,10 +204,8 @@ export function MarketingManager({
   }
 
   function resetDrafts() {
-    setFacebookSuggestedCopy("");
-    setFacebookRevisedCopy("");
-    setInstagramSuggestedCopy("");
-    setInstagramRevisedCopy("");
+    setSuggestedCopy("");
+    setRevisedCopy("");
     setEditReason("");
     setHasUploadedCreative(false);
   }
@@ -353,6 +349,12 @@ export function MarketingManager({
                         : "Needs more context"}
                   </Badge>
                 </div>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  <Badge tone="blue">Recommended: {postType}</Badge>
+                  {assetKind === "image" ? (
+                    <Badge tone="neutral">Reel copy hidden for static creative</Badge>
+                  ) : null}
+                </div>
 
                 <div className="grid gap-4">
                   <label className="block">
@@ -442,26 +444,19 @@ export function MarketingManager({
               <div>
                 <h2 className="text-lg font-semibold">Copy Approval</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Upload a creative to generate post-type copy. For now,
-                  Facebook and Instagram use the same approved copy for matching
-                  formats such as Reels, Posts, Stories, and Carousels.
+                  Upload a creative to generate copy only for the post type the
+                  asset is suited for. Static images will not receive Reel copy.
                 </p>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="grid gap-4 xl:grid-cols-2">
-                <PlatformCopyApproval
-                  platform="Facebook"
-                  suggestedCopy={facebookSuggestedCopy}
-                  revisedCopy={facebookRevisedCopy}
-                  onRevisedCopyChange={setFacebookRevisedCopy}
-                />
-                <PlatformCopyApproval
-                  platform="Instagram"
-                  suggestedCopy={instagramSuggestedCopy}
-                  revisedCopy={instagramRevisedCopy}
-                  onRevisedCopyChange={setInstagramRevisedCopy}
+              <div className="max-w-3xl">
+                <PostTypeCopyApproval
+                  postType={postType}
+                  suggestedCopy={suggestedCopy}
+                  revisedCopy={revisedCopy}
+                  onRevisedCopyChange={setRevisedCopy}
                 />
               </div>
 
@@ -484,8 +479,7 @@ export function MarketingManager({
                   onClick={handleFinalize}
                   disabled={
                     saveStatus === "saving" ||
-                    !facebookSuggestedCopy.trim() ||
-                    !instagramSuggestedCopy.trim()
+                    !suggestedCopy.trim()
                   }
                 >
                   <Save size={16} />
