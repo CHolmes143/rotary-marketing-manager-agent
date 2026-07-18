@@ -184,6 +184,7 @@ export function generatePlatformDrafts(
   parseResult: FilenameParseResult,
   confirmedContentType: string,
   postType = "Post",
+  creativeAnalysisSummary?: string,
 ): PlatformDrafts {
   const eventName = factValue(campaign, "event_identity") ?? campaign.name;
   const beneficiary =
@@ -222,6 +223,8 @@ export function generatePlatformDrafts(
       "",
       goalLine,
       "",
+      creativeAnalysisSummary ? `Creative context: ${creativeAnalysisSummary}` : undefined,
+      creativeAnalysisSummary ? "" : undefined,
       ...detailLines.flatMap((line) => [line, ""]),
       postTypeExecutionLine(postType),
       "",
@@ -232,7 +235,7 @@ export function generatePlatformDrafts(
       impactLine,
       "",
       facebookCta,
-    ].join("\n");
+    ].filter((line): line is string => line !== undefined).join("\n");
   const instagram = [
       `${eventName} brings local action, family energy, and scholarship impact together.`,
       "",

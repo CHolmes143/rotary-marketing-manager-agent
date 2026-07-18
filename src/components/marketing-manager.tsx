@@ -27,6 +27,186 @@ import {
 
 const initialCampaign = campaigns[0];
 
+type CreativeAnalysisState = {
+  status: "idle" | "analyzing" | "completed" | "failed";
+  detectedText: string;
+  visualSummary: string;
+  detectedSubjects: string[];
+  confidence: number;
+  framesAnalyzed: number;
+  analysisWarnings: string[];
+};
+
+const emptyCreativeAnalysis: CreativeAnalysisState = {
+  status: "idle",
+  detectedText: "",
+  visualSummary: "",
+  detectedSubjects: [],
+  confidence: 0,
+  framesAnalyzed: 0,
+  analysisWarnings: [],
+};
+
+function visualOrientation(width: number, height: number) {
+  if (!width || !height) return "unknown orientation";
+  if (height > width * 1.4) return "vertical";
+  if (width > height * 1.4) return "landscape";
+  return "square or near-square";
+}
+
+function analyzeCanvas(canvas: HTMLCanvasElement) {
+  const context = canvas.getContext("2d");
+  if (!context) return { brightness: 0, contrast: 0 };
+
+  const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+  const values: number[] = [];
+  const stride = Math.max(4, Math.floor(data.length / 1200 / 4) * 4);
+
+  for (let index = 0; index < data.length; index += stride) {
+    values.push((data[index] + data[index + 1] + data[index + 2]) / 3);
+  }
+
+  const brightness =
+    values.reduce((total, value) => total + value, 0) / values.length;
+  const contrast =
+    values.reduce((total, value) => total + Math.abs(value - brightness), 0) /
+    values.length;
+
+  return {
+    brightness: Math.round(brightness),
+    contrast: Math.round(contrast),
+  };
+}
+
+function canvasFor(width: number, height: number) {
+  const canvas = document.createElement("canvas");
+  const maxWidth = 320;
+  const scale = Math.min(1, maxWidth / Math.max(width, 1));
+  canvas.width = Math.max(1, Math.round(width * scale));
+  canvas.height = Math.max(1, Math.round(height * scale));
+  return canvas;
+}
+
+async function analyzeImage(url: string): Promise<CreativeAnalysisState> {
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+
+  const canvas = canvasFor(image.naturalWidth, image.naturalHeight);
+  canvas
+    .getContext("2d")
+    ?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const { brightness, contrast } = analyzeCanvas(canvas);
+  const orientation = visualOrientation(image.naturalWidth, image.naturalHeight);
+  const warnings =
+    orientation === "landscape"
+      ? ["Landscape images use less vertical feed space than 4:5 creative."]
+      : [];
+
+  return {
+    status: "completed",
+    detectedText: "",
+    visualSummary: `Single ${orientation} image, ${image.naturalWidth}x${image.naturalHeight}, sampled brightness ${brightness}, contrast ${contrast}.`,
+    detectedSubjects: [orientation, "single image"],
+    confidence: 0.55,
+    framesAnalyzed: 1,
+    analysisWarnings: warnings,
+  };
+}
+
+function waitForVideoEvent(video: HTMLVideoElement, eventName: string) {
+  return new Promise<void>((resolve, reject) => {
+    const cleanup = () => {
+      video.removeEventListener(eventName, handleEvent);
+      video.removeEventListener("error", handleError);
+    };
+    const handleEvent = () => {
+      cleanup();
+      resolve();
+    };
+    const handleError = () => {
+      cleanup();
+      reject(new Error("Video analysis failed."));
+    };
+    video.addEventListener(eventName, handleEvent, { once: true });
+    video.addEventListener("error", handleError, { once: true });
+  });
+}
+
+async function analyzeVideo(url: string): Promise<CreativeAnalysisState> {
+  const video = document.createElement("video");
+  video.src = url;
+  video.muted = true;
+  video.preload = "metadata";
+  video.playsInline = true;
+  await waitForVideoEvent(video, "loadedmetadata");
+
+  const duration = Number.isFinite(video.duration) ? video.duration : 0;
+  const sampleTimes =
+    duration > 0
+      ? [0.1, duration * 0.25, duration * 0.5, duration * 0.75, Math.max(0.1, duration - 0.1)]
+      : [0];
+  const uniqueSampleTimes = Array.from(
+    new Set(sampleTimes.map((time) => Number(time.toFixed(2)))),
+  );
+  const canvas = canvasFor(video.videoWidth, video.videoHeight);
+  const context = canvas.getContext("2d");
+  const samples: Array<{ brightness: number; contrast: number }> = [];
+
+  for (const time of uniqueSampleTimes) {
+    video.currentTime = Math.min(time, Math.max(0, duration - 0.05));
+    await waitForVideoEvent(video, "seeked");
+    context?.drawImage(video, 0, 0, canvas.width, canvas.height);
+    samples.push(analyzeCanvas(canvas));
+  }
+
+  const avgBrightness = Math.round(
+    samples.reduce((total, sample) => total + sample.brightness, 0) /
+      samples.length,
+  );
+  const avgContrast = Math.round(
+    samples.reduce((total, sample) => total + sample.contrast, 0) /
+      samples.length,
+  );
+  const orientation = visualOrientation(video.videoWidth, video.videoHeight);
+  const warnings = [
+    duration > 60
+      ? "Video is longer than 60 seconds; Reel copy should assume a shorter edited cut."
+      : "",
+    orientation !== "vertical"
+      ? "Video is not vertical 9:16; Reels and Stories usually need vertical framing."
+      : "",
+  ].filter(Boolean);
+
+  return {
+    status: "completed",
+    detectedText: "",
+    visualSummary: `${orientation} video, ${video.videoWidth}x${video.videoHeight}, ${duration.toFixed(1)} seconds, sampled ${samples.length} representative frames, average brightness ${avgBrightness}, average contrast ${avgContrast}.`,
+    detectedSubjects: [orientation, "video", `${samples.length} sampled frames`],
+    confidence: 0.6,
+    framesAnalyzed: samples.length,
+    analysisWarnings: warnings,
+  };
+}
+
+async function analyzeCreativeFile(
+  file: File,
+  url: string,
+  assetKind: "image" | "video",
+): Promise<CreativeAnalysisState> {
+  try {
+    return assetKind === "video" ? await analyzeVideo(url) : await analyzeImage(url);
+  } catch (error) {
+    return {
+      ...emptyCreativeAnalysis,
+      status: "failed",
+      analysisWarnings: [
+        error instanceof Error ? error.message : "Creative analysis failed.",
+      ],
+    };
+  }
+}
+
 function Badge({
   children,
   tone = "neutral",
@@ -126,6 +306,9 @@ export function MarketingManager({
   const [assetKind, setAssetKind] = useState<"image" | "video" | "none">(
     "none",
   );
+  const [assetMeta, setAssetMeta] = useState({ mimeType: "", fileSize: 0 });
+  const [creativeAnalysis, setCreativeAnalysis] =
+    useState<CreativeAnalysisState>(emptyCreativeAnalysis);
   const [hasUploadedCreative, setHasUploadedCreative] = useState(false);
   const [suggestedCopy, setSuggestedCopy] = useState("");
   const [revisedCopy, setRevisedCopy] = useState("");
@@ -146,6 +329,7 @@ export function MarketingManager({
   function generateCopyForContext(
     nextFilename: string,
     nextAssetKind = assetKind,
+    analysisSummary = creativeAnalysis.visualSummary,
   ) {
     const nextParseResult = parseCreativeFilename(nextFilename, campaign.name);
     const nextPostType = suitablePostType(
@@ -158,6 +342,7 @@ export function MarketingManager({
       nextParseResult,
       nextParseResult.contentType ?? "Unconfirmed content type",
       nextPostType,
+      analysisSummary,
     );
     const sharedPostTypeDraft = drafts.facebook;
     setSuggestedCopy(sharedPostTypeDraft);
@@ -180,6 +365,17 @@ export function MarketingManager({
         subject: parseResult.subject ?? "Unconfirmed subject",
         assetPurpose: parseResult.assetPurpose ?? "Unconfirmed purpose",
         postType,
+        assetType: assetKind === "video" ? "video" : "image",
+        mimeType: assetMeta.mimeType,
+        fileSize: assetMeta.fileSize,
+        creativeAnalysis: {
+          detectedText: creativeAnalysis.detectedText,
+          visualSummary: creativeAnalysis.visualSummary,
+          detectedSubjects: creativeAnalysis.detectedSubjects,
+          confidence: creativeAnalysis.confidence,
+          framesAnalyzed: creativeAnalysis.framesAnalyzed,
+          analysisWarnings: creativeAnalysis.analysisWarnings,
+        },
         filenameParseStatus: parseResult.status,
         filenameParseWarnings: parseResult.warnings,
         facebookSuggestedCopy: suggestedCopy,
@@ -196,14 +392,28 @@ export function MarketingManager({
     }
   }
 
-  function handleFileUpload(file: File | undefined) {
+  async function handleFileUpload(file: File | undefined) {
     if (!file) return;
     const nextAssetKind = file.type.startsWith("video") ? "video" : "image";
+    const nextAssetUrl = URL.createObjectURL(file);
     setFilename(file.name);
     setAssetKind(nextAssetKind);
-    setAssetUrl(URL.createObjectURL(file));
+    setAssetMeta({ mimeType: file.type, fileSize: file.size });
+    setAssetUrl(nextAssetUrl);
     setHasUploadedCreative(true);
-    generateCopyForContext(file.name, nextAssetKind);
+    setCreativeAnalysis({ ...emptyCreativeAnalysis, status: "analyzing" });
+
+    const nextAnalysis = await analyzeCreativeFile(
+      file,
+      nextAssetUrl,
+      nextAssetKind,
+    );
+    setCreativeAnalysis(nextAnalysis);
+    generateCopyForContext(
+      file.name,
+      nextAssetKind,
+      nextAnalysis.visualSummary,
+    );
   }
 
   function handleFilenameChange(value: string) {
@@ -217,6 +427,8 @@ export function MarketingManager({
     setSuggestedCopy("");
     setRevisedCopy("");
     setEditReason("");
+    setCreativeAnalysis(emptyCreativeAnalysis);
+    setAssetMeta({ mimeType: "", fileSize: 0 });
     setHasUploadedCreative(false);
   }
 
@@ -432,18 +644,48 @@ export function MarketingManager({
                     accept="image/*,video/*"
                     className="sr-only"
                     onChange={(event) =>
-                      handleFileUpload(event.target.files?.[0])
+                      void handleFileUpload(event.target.files?.[0])
                     }
                   />
                 </label>
-                <div className="mt-3 flex items-center gap-2 text-xs text-stone-600">
-                  {assetKind === "video" ? (
-                    <FileVideo size={15} />
+                <div className="mt-3 rounded-md border border-stone-200 bg-white p-3 text-xs text-stone-600">
+                  <div className="flex items-center gap-2 font-semibold text-stone-800">
+                    {assetKind === "video" ? (
+                      <FileVideo size={15} />
+                    ) : (
+                      <FileImage size={15} />
+                    )}
+                    Creative analysis
+                  </div>
+                  {creativeAnalysis.status === "analyzing" ? (
+                    <p className="mt-2 leading-5">Analyzing uploaded creative...</p>
+                  ) : creativeAnalysis.visualSummary ? (
+                    <div className="mt-2 space-y-2 leading-5">
+                      <p>{creativeAnalysis.visualSummary}</p>
+                      <p>
+                        Frames analyzed: {creativeAnalysis.framesAnalyzed}
+                        {" | "}
+                        Confidence: {Math.round(creativeAnalysis.confidence * 100)}%
+                      </p>
+                      {creativeAnalysis.analysisWarnings.length > 0 ? (
+                        <ul className="space-y-1 text-amber-800">
+                          {creativeAnalysis.analysisWarnings.map((warning) => (
+                            <li key={warning}>{warning}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  ) : creativeAnalysis.status === "failed" ? (
+                    <p className="mt-2 leading-5 text-amber-800">
+                      Analysis could not be completed, so copy will use filename
+                      and campaign knowledge only.
+                    </p>
                   ) : (
-                    <FileImage size={15} />
+                    <p className="mt-2 leading-5">
+                      Upload a creative to analyze image dimensions or video
+                      frame samples before copy is generated.
+                    </p>
                   )}
-                  Media analysis placeholder: detected text, visual summary,
-                  frame count, and confidence will persist with storage.
                 </div>
               </div>
             </div>

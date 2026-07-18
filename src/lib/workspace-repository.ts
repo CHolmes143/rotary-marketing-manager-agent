@@ -27,6 +27,17 @@ export type FinalizeCopyInput = {
   subject: string;
   assetPurpose: string;
   postType: string;
+  assetType: "image" | "video";
+  mimeType: string;
+  fileSize: number;
+  creativeAnalysis: {
+    detectedText?: string;
+    visualSummary?: string;
+    detectedSubjects?: string[];
+    confidence?: number;
+    framesAnalyzed?: number;
+    analysisWarnings?: string[];
+  };
   filenameParseStatus: "matched" | "partial" | "invalid";
   filenameParseWarnings: string[];
   facebookSuggestedCopy: string;
@@ -278,10 +289,26 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
       postType,
       filenameParseStatus: input.filenameParseStatus,
       filenameParseWarnings: input.filenameParseWarnings,
-      assetType: "image",
+      assetType: input.assetType,
       storageKey: `pending-blob/${input.filename}`,
-      mimeType: "application/octet-stream",
-      fileSize: 0,
+      mimeType: input.mimeType || "application/octet-stream",
+      fileSize: input.fileSize,
+    },
+  });
+
+  await prisma.creativeAnalysis.create({
+    data: {
+      creativeAssetId: asset.id,
+      analysisStatus: input.creativeAnalysis.visualSummary
+        ? "completed"
+        : "skipped",
+      detectedText: input.creativeAnalysis.detectedText || null,
+      visualSummary: input.creativeAnalysis.visualSummary || null,
+      detectedSubjects: input.creativeAnalysis.detectedSubjects ?? undefined,
+      confidence: input.creativeAnalysis.confidence ?? null,
+      framesAnalyzed: input.creativeAnalysis.framesAnalyzed ?? null,
+      modelUsed: "browser-media-sampler",
+      analysisWarnings: input.creativeAnalysis.analysisWarnings ?? [],
     },
   });
 
@@ -300,6 +327,7 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         postType,
         subject: input.subject,
         assetPurpose: input.assetPurpose,
+        creativeAnalysis: input.creativeAnalysis,
         warnings: input.filenameParseWarnings,
       },
       platformCopies: {
