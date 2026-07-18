@@ -128,16 +128,13 @@ export function parseCreativeFilename(
         ];
 
     return {
-      status: "partial",
+      status: versionValue ? "matched" : "partial",
       campaign: selectedCampaignName,
       contentType,
       subject: humanizeSegment(`${campaignSegment} ${subject}`),
       assetPurpose: assetPurpose ? humanizeSegment(assetPurpose) : undefined,
       version: versionValue,
-      warnings: [
-        "Filename starts with audience/context instead of campaign, so the selected campaign will be used.",
-        ...versionWarning,
-      ],
+      warnings: versionWarning,
     };
   }
 
