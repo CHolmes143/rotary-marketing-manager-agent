@@ -329,7 +329,6 @@ export function MarketingManager({
   function generateCopyForContext(
     nextFilename: string,
     nextAssetKind = assetKind,
-    analysisSummary = creativeAnalysis.visualSummary,
   ) {
     const nextParseResult = parseCreativeFilename(nextFilename, campaign.name);
     const nextPostType = suitablePostType(
@@ -342,7 +341,6 @@ export function MarketingManager({
       nextParseResult,
       nextParseResult.contentType ?? "Unconfirmed content type",
       nextPostType,
-      analysisSummary,
     );
     const sharedPostTypeDraft = drafts.facebook;
     setSuggestedCopy(sharedPostTypeDraft);
@@ -402,7 +400,7 @@ export function MarketingManager({
     setAssetUrl(nextAssetUrl);
     setHasUploadedCreative(true);
     setCreativeAnalysis({ ...emptyCreativeAnalysis, status: "analyzing" });
-    generateCopyForContext(file.name, nextAssetKind, "");
+    generateCopyForContext(file.name, nextAssetKind);
 
     const nextAnalysis = await analyzeCreativeFile(
       file,
@@ -413,7 +411,6 @@ export function MarketingManager({
     generateCopyForContext(
       file.name,
       nextAssetKind,
-      nextAnalysis.visualSummary,
     );
   }
 

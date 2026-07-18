@@ -414,6 +414,15 @@ export const campaigns: Campaign[] = [
         stability: "permanent",
       },
       {
+        id: "fact-hook-and-brevity-guidance",
+        category: "voice",
+        label: "Hook and brevity guidance",
+        value:
+          "Public copy must open with a strong, specific hook rather than a soft explainer such as 'A quick look at why...'. Do not include internal analysis, creative metadata, execution notes, or stacked event facts in the public caption. Use only the most relevant facts for the audience and post type, then move quickly to the ask.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
         id: "fact-carousel-guidance",
         category: "creative_strategy",
         label: "Carousel guidance",

@@ -110,35 +110,32 @@ function creativeGoalLine(audience: string, subject: string, purpose: string) {
   return "The event brings families, businesses, and neighbors together around a shared local purpose.";
 }
 
-function audienceDetailLines(campaign: Campaign, audience: string) {
+function publicDetailLines(campaign: Campaign, audience: string) {
   const kind = audienceKind(audience);
-  const familyAttractions = factLabelValue(campaign, "Family attractions");
-  const admission = factLabelValue(campaign, "Admission and parking");
   const dateTime = factLabelValue(campaign, "Date and time");
   const location = factLabelValue(campaign, "Location");
-  const vendorPositioning = factLabelValue(campaign, "Vendor positioning");
   const vendorFees = factLabelValue(campaign, "Vendor fees");
-  const stickHorsePositioning = factLabelValue(
-    campaign,
-    "Stick Horse Showdown positioning",
-  );
   const stickHorseFee = factLabelValue(campaign, "Stick Horse Showdown fee");
-  const booster = factLabelValue(campaign, "Rotary Booster");
-  const silentAuction = factLabelValue(campaign, "Silent auction");
 
   if (kind === "vendor") {
-    return [vendorPositioning, vendorFees].filter(Boolean) as string[];
+    return [
+      "Set up your business where hundreds of Dripping Springs families will already be spending the day.",
+      vendorFees ? vendorFees.replace("Vendor fees are tax-deductible donations: ", "Booth fees: ") : undefined,
+    ].filter(Boolean) as string[];
   }
 
   if (kind === "stick_horse") {
-    return [stickHorsePositioning, stickHorseFee].filter(Boolean) as string[];
+    return [
+      "Sponsor a stick horse, race it yourself, send a teammate, or cheer on a crowd volunteer.",
+      stickHorseFee,
+    ].filter(Boolean) as string[];
   }
 
-  if (kind === "donor") {
-    return [silentAuction, booster].filter(Boolean) as string[];
-  }
-
-  return [dateTime, location, admission, familyAttractions].filter(Boolean) as string[];
+  return [
+    dateTime,
+    location ? location.replace(", 5330 Bell Springs Road, Dripping Springs, Texas.", "") : undefined,
+    "Free parking. Free admission. Family fun that helps fund local scholarships.",
+  ].filter(Boolean) as string[];
 }
 
 function applyTerminologyRules(copy: string) {
@@ -148,35 +145,33 @@ function applyTerminologyRules(copy: string) {
 }
 
 function postTypeOpening(postType: string, audience: string, eventName: string) {
+  const kind = audienceKind(audience);
+
   if (postType === "Reel") {
-    return `A quick look at why ${eventName} matters for ${audience}.`;
+    if (kind === "vendor") {
+      return "Vendor spaces are open, and this is the kind of local crowd small businesses want to be in front of.";
+    }
+
+    if (kind === "stick_horse") {
+      return "Your business could be the one everyone is cheering for in the Stick Horse Showdown.";
+    }
+
+    if (kind === "sponsor") {
+      return "Put your business where the community is already gathering.";
+    }
+
+    return "Free admission, live music, family fun, and a rodeo day that helps fund local scholarships.";
   }
 
   if (postType === "Carousel") {
-    return `Swipe through the details ${audience} need for ${eventName}.`;
+    return `Save this: the key details for ${eventName} are all in one place.`;
   }
 
   if (postType === "Story") {
-    return `${eventName} update for ${audience}.`;
+    return "Quick reminder before this gets buried in your feed.";
   }
 
-  return `Calling ${audience}: ${eventName} is built by the community, for the community.`;
-}
-
-function postTypeExecutionLine(postType: string) {
-  if (postType === "Reel") {
-    return "Use this with a vertical video hook, clear captions, and visible human action in the first few seconds.";
-  }
-
-  if (postType === "Carousel") {
-    return "Use this with a strong first slide, simple swipe-by-swipe details, and the CTA before the final slide.";
-  }
-
-  if (postType === "Story") {
-    return "Use this with a countdown, poll, question, slider, or link sticker when available.";
-  }
-
-  return "Use this as an anchor caption for a clear 4:5 feed graphic.";
+  return `Calling ${audience}: ${eventName} is almost here.`;
 }
 
 export function generatePlatformDrafts(
@@ -184,15 +179,11 @@ export function generatePlatformDrafts(
   parseResult: FilenameParseResult,
   confirmedContentType: string,
   postType = "Post",
-  creativeAnalysisSummary?: string,
 ): PlatformDrafts {
   const eventName = factValue(campaign, "event_identity") ?? campaign.name;
   const beneficiary =
     factValue(campaign, "beneficiary") ??
     "Rotary Club of Dripping Springs community service efforts.";
-  const purposeFact =
-    factLabelValue(campaign, "Event purpose") ??
-    "bring families and Rotary together around community impact.";
   const subject = parseResult.subject ?? "this Rotary update";
   const purpose = parseResult.assetPurpose ?? "community awareness";
   const contentType = cleanContentType(confirmedContentType) ?? cleanContentType(parseResult.contentType);
@@ -200,10 +191,10 @@ export function generatePlatformDrafts(
   const impactLine = scholarshipImpactLine(audience);
   const goalLine = creativeGoalLine(audience, subject, purpose);
   const kind = audienceKind(audience);
-  const detailLines = audienceDetailLines(campaign, audience);
+  const detailLines = publicDetailLines(campaign, audience);
   const facebookCta =
     kind === "vendor"
-      ? "Vendor spaces are limited. Register through BackToSchoolRodeo to be considered."
+      ? "Reserve your vendor space at BackToSchoolRodeo."
       : kind === "stick_horse"
         ? "Register through BackToSchoolRodeo and get ready to race, send a teammate, or cheer on a crowd volunteer."
       : kind === "sponsor"
@@ -221,21 +212,15 @@ export function generatePlatformDrafts(
   const facebook = [
       postTypeOpening(postType, audience, eventName),
       "",
-      goalLine,
-      "",
-      creativeAnalysisSummary ? `Creative context: ${creativeAnalysisSummary}` : undefined,
-      creativeAnalysisSummary ? "" : undefined,
-      ...detailLines.flatMap((line) => [line, ""]),
-      postTypeExecutionLine(postType),
-      "",
-      `The heart of the event is simple: ${purposeFact}`,
-      "",
-      beneficiary,
-      "",
-      impactLine,
+      ...(kind === "vendor" || kind === "stick_horse" ? [] : [goalLine, ""]),
+      ...detailLines.slice(0, 3).flatMap((line) => [line, ""]),
+      kind === "vendor" || kind === "stick_horse" ? "" : beneficiary,
+      kind === "vendor" || kind === "stick_horse" ? undefined : "",
+      kind === "vendor" || kind === "stick_horse" ? impactLine : undefined,
+      kind === "vendor" || kind === "stick_horse" ? "" : undefined,
       "",
       facebookCta,
-    ].filter((line): line is string => line !== undefined).join("\n");
+    ].filter((line): line is string => line !== undefined).join("\n").replace(/\n{3,}/g, "\n\n");
   const instagram = [
       `${eventName} brings local action, family energy, and scholarship impact together.`,
       "",
