@@ -58,6 +58,7 @@ const statements = [
     "filenameSubject" TEXT,
     "filenameAssetPurpose" TEXT,
     "filenameVersion" TEXT,
+    "postType" TEXT,
     "filenameParseStatus" "FilenameParseStatus" NOT NULL,
     "filenameParseWarnings" JSONB NOT NULL,
     "assetType" "AssetType" NOT NULL,
@@ -88,6 +89,7 @@ const statements = [
     "campaignId" TEXT NOT NULL REFERENCES "Campaign"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "creativeAssetId" TEXT NOT NULL REFERENCES "CreativeAsset"("id") ON DELETE CASCADE ON UPDATE CASCADE,
     "contentTypeId" TEXT REFERENCES "ContentType"("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    "postType" TEXT,
     "generationStatus" "GenerationStatus" NOT NULL DEFAULT 'draft',
     "promptVersion" TEXT NOT NULL,
     "modelUsed" TEXT NOT NULL,
@@ -115,6 +117,7 @@ const statements = [
     "contentTypeId" TEXT REFERENCES "ContentType"("id") ON DELETE SET NULL ON UPDATE CASCADE,
     "creativeAssetId" TEXT REFERENCES "CreativeAsset"("id") ON DELETE SET NULL ON UPDATE CASCADE,
     "platform" "Platform" NOT NULL,
+    "postType" TEXT,
     "subject" TEXT,
     "objective" TEXT,
     "aiDraft" TEXT NOT NULL,
@@ -151,6 +154,12 @@ const statements = [
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`,
   `CREATE UNIQUE INDEX IF NOT EXISTS "TrainingSource_stableKey_key" ON "TrainingSource"("stableKey")`,
+  `ALTER TABLE "CreativeAsset" ADD COLUMN IF NOT EXISTS "postType" TEXT`,
+  `ALTER TABLE "GeneratedCopySet" ADD COLUMN IF NOT EXISTS "postType" TEXT`,
+  `ALTER TABLE "LearningRecord" ADD COLUMN IF NOT EXISTS "postType" TEXT`,
+  `UPDATE "CreativeAsset" SET "postType" = 'Post' WHERE "postType" IS NULL`,
+  `UPDATE "GeneratedCopySet" SET "postType" = 'Post' WHERE "postType" IS NULL`,
+  `UPDATE "LearningRecord" SET "postType" = 'Post', "patternScope" = 'campaign' WHERE "postType" IS NULL`,
 ];
 
 export async function bootstrapDatabase() {

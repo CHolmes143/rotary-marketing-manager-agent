@@ -89,6 +89,7 @@ export async function GET(request: Request) {
     records: records.map((record) => ({
       id: record.id,
       platform: record.platform,
+      postType: record.postType,
       contentType: record.contentType?.name ?? null,
       subject: record.subject,
       objective: record.objective,

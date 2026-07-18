@@ -134,6 +134,7 @@ model CreativeAsset {
   filenameSubject      String?
   filenameAssetPurpose String?
   filenameVersion      String?
+  postType             String?
   filenameParseStatus  FilenameParseStatus
   filenameParseWarnings Json
   assetType            AssetType
@@ -171,6 +172,7 @@ model GeneratedCopySet {
   campaignId              String
   creativeAssetId          String
   contentTypeId            String?
+  postType                 String?
   generationStatus         GenerationStatus @default(draft)
   promptVersion            String
   modelUsed                String
@@ -205,6 +207,7 @@ model LearningRecord {
   contentTypeId     String?
   creativeAssetId   String?
   platform          Platform
+  postType          String?
   subject           String?
   objective         String?
   aiDraft           String

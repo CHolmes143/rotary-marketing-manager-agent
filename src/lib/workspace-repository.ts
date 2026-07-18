@@ -6,10 +6,12 @@ import {
   normalizeToken,
   trainingSources,
 } from "@/lib/rotary-data";
+import { derivePostType } from "@/lib/post-type";
 
 export type LearningRecordView = {
   id: string;
   platform: string;
+  postType: string;
   contentType: string;
   subject: string;
   aiDraft: string;
@@ -24,6 +26,7 @@ export type FinalizeCopyInput = {
   contentType: string;
   subject: string;
   assetPurpose: string;
+  postType: string;
   filenameParseStatus: "matched" | "partial" | "invalid";
   filenameParseWarnings: string[];
   facebookSuggestedCopy: string;
@@ -174,6 +177,7 @@ export async function getLearningRecords(): Promise<LearningRecordView[]> {
   return records.map((record) => ({
     id: record.id,
     platform: record.platform === "facebook" ? "Facebook" : "Instagram",
+    postType: record.postType ?? "Post",
     contentType: record.contentType?.name ?? "Unconfirmed content type",
     subject: record.subject ?? "Unconfirmed subject",
     aiDraft: record.aiDraft,
@@ -206,6 +210,7 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
       {
         id: crypto.randomUUID(),
         platform: "Instagram",
+        postType: input.postType,
         contentType: input.contentType,
         subject: input.subject,
         aiDraft: input.instagramSuggestedCopy,
@@ -216,6 +221,7 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
       {
         id: crypto.randomUUID(),
         platform: "Facebook",
+        postType: input.postType,
         contentType: input.contentType,
         subject: input.subject,
         aiDraft: input.facebookSuggestedCopy,
@@ -230,6 +236,11 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
   }
 
   await ensureSeedData();
+  const postType = input.postType || derivePostType(input.filename, {
+    contentType: input.contentType,
+    subject: input.subject,
+    assetPurpose: input.assetPurpose,
+  });
 
   const campaign = await prisma.campaign.findUniqueOrThrow({
     where: { slug: input.campaignSlug },
@@ -264,6 +275,7 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
       filenameSubject: input.subject,
       filenameAssetPurpose: input.assetPurpose,
       filenameVersion: input.filename.match(/_([^_]+)\.[^.]+$/)?.[1],
+      postType,
       filenameParseStatus: input.filenameParseStatus,
       filenameParseWarnings: input.filenameParseWarnings,
       assetType: "image",
@@ -278,12 +290,14 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
       campaignId: campaign.id,
       creativeAssetId: asset.id,
       contentTypeId: contentType.id,
+      postType,
       generationStatus: "finalized",
       promptVersion: "phase-1-local-draft",
       modelUsed: "local-template",
       campaignFactsSnapshot: factsSnapshot,
       creativeContextSnapshot: {
         filename: input.filename,
+        postType,
         subject: input.subject,
         assetPurpose: input.assetPurpose,
         warnings: input.filenameParseWarnings,
@@ -318,26 +332,28 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         contentTypeId: contentType.id,
         creativeAssetId: asset.id,
         platform: "facebook",
+        postType,
         subject: input.subject,
         objective: input.assetPurpose,
         aiDraft: input.facebookSuggestedCopy,
         finalCopy: facebookFinalCopy,
         editReason: input.editReason || null,
-        patternScope: "platform",
-        rationale: `GeneratedCopySet ${copySet.id}`,
+        patternScope: "campaign",
+        rationale: `Post-type learning (${postType}) from GeneratedCopySet ${copySet.id}`,
       },
       {
         campaignId: campaign.id,
         contentTypeId: contentType.id,
         creativeAssetId: asset.id,
         platform: "instagram",
+        postType,
         subject: input.subject,
         objective: input.assetPurpose,
         aiDraft: input.instagramSuggestedCopy,
         finalCopy: instagramFinalCopy,
         editReason: input.editReason || null,
-        patternScope: "platform",
-        rationale: `GeneratedCopySet ${copySet.id}`,
+        patternScope: "campaign",
+        rationale: `Post-type learning (${postType}) from GeneratedCopySet ${copySet.id}`,
       },
     ],
   });

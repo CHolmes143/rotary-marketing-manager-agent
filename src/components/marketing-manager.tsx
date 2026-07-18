@@ -16,6 +16,7 @@ import { useMemo, useState } from "react";
 import { finalizeCopy } from "@/app/actions";
 import { generatePlatformDrafts } from "@/lib/copy-generator";
 import { parseCreativeFilename } from "@/lib/filename-parser";
+import { derivePostType } from "@/lib/post-type";
 import type { LearningRecordView } from "@/lib/workspace-repository";
 import {
   campaigns,
@@ -140,6 +141,7 @@ export function MarketingManager({
   );
 
   const parsedContentType = parseResult.contentType ?? "Unconfirmed content type";
+  const postType = derivePostType(filename, parseResult);
 
   function generateCopyForContext(nextFilename: string) {
     const nextParseResult = parseCreativeFilename(nextFilename, campaign.name);
@@ -148,10 +150,11 @@ export function MarketingManager({
       nextParseResult,
       nextParseResult.contentType ?? "Unconfirmed content type",
     );
-    setFacebookSuggestedCopy(drafts.facebook);
-    setInstagramSuggestedCopy(drafts.instagram);
-    setFacebookRevisedCopy(drafts.facebook);
-    setInstagramRevisedCopy(drafts.instagram);
+    const sharedPostTypeDraft = drafts.facebook;
+    setFacebookSuggestedCopy(sharedPostTypeDraft);
+    setInstagramSuggestedCopy(sharedPostTypeDraft);
+    setFacebookRevisedCopy(sharedPostTypeDraft);
+    setInstagramRevisedCopy(sharedPostTypeDraft);
     setEditReason("");
   }
 
@@ -169,6 +172,7 @@ export function MarketingManager({
         contentType: parsedContentType,
         subject: parseResult.subject ?? "Unconfirmed subject",
         assetPurpose: parseResult.assetPurpose ?? "Unconfirmed purpose",
+        postType,
         filenameParseStatus: parseResult.status,
         filenameParseWarnings: parseResult.warnings,
         facebookSuggestedCopy,
@@ -438,9 +442,9 @@ export function MarketingManager({
               <div>
                 <h2 className="text-lg font-semibold">Copy Approval</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Upload a creative to automatically generate platform-specific
-                  recommendations, then revise or approve them for the learning
-                  record.
+                  Upload a creative to generate post-type copy. For now,
+                  Facebook and Instagram use the same approved copy for matching
+                  formats such as Reels, Posts, Stories, and Carousels.
                 </p>
               </div>
             </div>
@@ -496,9 +500,9 @@ export function MarketingManager({
               <div>
                 <h2 className="text-lg font-semibold">Learning Records</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Finalized copy stores platform-specific suggested text,
-                  revised approved text, edit reason, campaign, content type,
-                  subject, and timestamp.
+                  Finalized copy stores suggested text, revised approved text,
+                  edit reason, campaign, post type, content type, subject, and
+                  timestamp. Platform is retained as a delivery channel.
                 </p>
               </div>
               <Badge tone={records.length ? "good" : "neutral"}>
@@ -527,6 +531,7 @@ export function MarketingManager({
                   <thead className="bg-stone-50 text-xs uppercase tracking-wide text-stone-500">
                     <tr>
                       <th className="px-3 py-2">Record</th>
+                      <th className="px-3 py-2">Post type</th>
                       <th className="px-3 py-2">Subject</th>
                       <th className="px-3 py-2">Content type</th>
                       <th className="px-3 py-2">Edit reason</th>
@@ -538,6 +543,9 @@ export function MarketingManager({
                       <tr key={record.id} className="border-t border-stone-100">
                         <td className="px-3 py-3 font-medium text-stone-900">
                           {record.platform}
+                        </td>
+                        <td className="px-3 py-3 text-stone-700">
+                          {record.postType}
                         </td>
                         <td className="px-3 py-3 text-stone-700">
                           {record.subject}
