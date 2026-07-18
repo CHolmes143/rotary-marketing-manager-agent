@@ -35,6 +35,20 @@ function scholarshipImpactLine(audience: string) {
   return "Every family, business, and community member who shows up helps support scholarships for local students.";
 }
 
+function audienceKind(audience: string) {
+  if (audience.includes("vendor")) return "vendor";
+  if (audience.includes("sponsor") || audience.includes("business")) {
+    return "sponsor";
+  }
+  if (audience.includes("donor") || audience.includes("auction")) return "donor";
+  if (audience.includes("volunteer")) return "volunteer";
+  if (audience.includes("participant") || audience.includes("families")) {
+    return "attendee";
+  }
+
+  return "community";
+}
+
 function cleanContentType(value: string | undefined) {
   if (!value || /unconfirmed/i.test(value)) return undefined;
 
@@ -62,24 +76,25 @@ function audienceCue(contentType: string | undefined, subject: string) {
 
 function creativeGoalLine(audience: string, subject: string, purpose: string) {
   const value = `${subject} ${purpose}`.toLowerCase();
+  const kind = audienceKind(audience);
 
-  if (audience.includes("vendor")) {
+  if (kind === "vendor") {
     if (value.includes("open") || value.includes("registration")) {
-      return "Vendor registration is a chance to be part of a family-focused community event with local visibility built in.";
+      return "Vendor registration is a chance to put your business in front of local families while helping fund scholarships for Dripping Springs students.";
     }
 
-    return "Vendor participation helps bring local flavor, energy, and connection to the event.";
+    return "Vendor participation brings local flavor to the event and gives small businesses a meaningful way to be seen by the community.";
   }
 
-  if (audience.includes("sponsor") || audience.includes("business")) {
-    return "Sponsorship is a visible way for local businesses to support students and show up for the community.";
+  if (kind === "sponsor") {
+    return "Sponsorship is a visible community partnership: your business shows up for local families while helping create scholarship opportunities.";
   }
 
-  if (audience.includes("donor") || audience.includes("auction")) {
+  if (kind === "donor") {
     return "Silent auction support gives the community another meaningful way to contribute to local scholarships.";
   }
 
-  if (audience.includes("volunteer")) {
+  if (kind === "volunteer") {
     return "Volunteer support helps make the day organized, welcoming, and memorable for families.";
   }
 
@@ -110,9 +125,22 @@ export function generatePlatformDrafts(
   const audience = audienceCue(contentType, subject);
   const impactLine = scholarshipImpactLine(audience);
   const goalLine = creativeGoalLine(audience, subject, purpose);
+  const kind = audienceKind(audience);
+  const facebookCta =
+    kind === "vendor"
+      ? "Vendor spaces are limited. Register through BackToSchoolRodeo to be considered."
+      : kind === "sponsor"
+        ? "Reach out for the sponsorship packet and partnership options."
+        : "Follow Rotary Club of Dripping Springs for official updates and ways to get involved.";
+  const instagramCta =
+    kind === "vendor"
+      ? "Vendor details: BackToSchoolRodeo"
+      : kind === "sponsor"
+        ? "Partnership details: BackToSchoolRodeo"
+        : "Event details: BackToSchoolRodeo";
 
   const facebook = [
-      `There is a place for ${audience} at ${eventName}.`,
+      `Calling ${audience}: ${eventName} is built by the community, for the community.`,
       "",
       goalLine,
       "",
@@ -122,14 +150,16 @@ export function generatePlatformDrafts(
       "",
       impactLine,
       "",
-      "Follow Rotary Club of Dripping Springs for official updates and ways to get involved.",
+      facebookCta,
     ].join("\n");
   const instagram = [
-      `Community comes together at ${eventName}.`,
+      `${eventName} brings local action, family energy, and scholarship impact together.`,
       "",
       `Family-focused, community-powered, and rooted in local impact. ${goalLine}`,
       "",
       "Funds raised benefit the Dripping Springs High School Scholarship Fund.",
+      "",
+      instagramCta,
       "",
       "#DrippingSprings #RotaryClub #BackToSchoolRodeo #CommunityImpact",
     ].join("\n");

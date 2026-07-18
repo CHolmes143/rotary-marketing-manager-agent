@@ -272,6 +272,78 @@ export const campaigns: Campaign[] = [
         stability: "permanent",
       },
       {
+        id: "fact-rotary-voice-framework",
+        category: "voice",
+        label: "Rotary voice framework",
+        value:
+          "Represent Rotary as persevering, inspiring, compassionate, and smart. Use People of Action framing: show Rotary members and community partners actively solving local challenges rather than positioning Rotary as a passive funder.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-nonprofit-story-formula",
+        category: "voice",
+        label: "Nonprofit story formula",
+        value:
+          "For impact stories, center one relatable person or group, explain the local challenge with dignity, show the Rotary Rodeo as the mechanism of support, name a specific positive outcome when facts are available, and invite the reader to continue that impact through tickets, sponsorship, vendor participation, donations, volunteering, or sharing.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-platform-copy-rules",
+        category: "voice",
+        label: "Facebook and Instagram copy rules",
+        value:
+          "Do not cross-post identical copy. Facebook can use fuller context, direct links, local discussion prompts, and 1 to 2 highly relevant hashtags. Instagram should be shorter, visual-first, save/share-oriented, and use a clean caption with link-in-bio style CTA when appropriate; hashtag blocks belong outside the main narrative when possible.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-copy-frameworks",
+        category: "voice",
+        label: "Copywriting frameworks",
+        value:
+          "Use AIDA for broad attendee awareness and ticket interest; PASO for urgent vendor, sponsorship, deadline, or availability posts; BAB for storytelling, sponsor validation, and thank-you or stewardship posts. Always include a clear reason behind the ask and prefer concrete details over vague claims.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-vendor-copy-guidance",
+        category: "audience",
+        label: "Vendor copy guidance",
+        value:
+          "Vendor copy should speak to expected foot traffic, booth value, simple registration, setup/logistics, category protection when known, and local visibility. Treat calls for vendors as practical value propositions, not sponsorship appeals.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-sponsor-copy-guidance",
+        category: "audience",
+        label: "Sponsor copy guidance",
+        value:
+          "Sponsor copy should frame sponsorship as a strategic community partnership with local brand exposure, social proof, civic trust, and scholarship impact. Emphasize collaboration and visibility, not generic donation language.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-attendee-copy-guidance",
+        category: "audience",
+        label: "Attendee copy guidance",
+        value:
+          "Attendee copy should balance family-friendly entertainment, community tradition, clear logistics, official buying paths, and scholarship impact. Use direct official links on Facebook and link-in-bio style direction on Instagram when a clickable feed link is not available.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-specificity-rule",
+        category: "prohibited_claim",
+        label: "Specificity rule",
+        value:
+          "Use exact dates, times, prices, venue details, ticket/vendor/sponsor benefits, and measurable outcomes only when they are supplied or approved. Never invent attendance numbers, scholarship amounts, sponsor tiers, deadlines, category caps, venue infrastructure, or Meta performance claims.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
         id: "fact-prohibited",
         category: "prohibited_claim",
         label: "Prohibited claims",
@@ -302,6 +374,24 @@ export const trainingSources: TrainingSource[] = [
       "Defines purpose, objectives, target audiences, brand voice, core messaging, website reference, channels, and agent guidance for Back to School Rotary Rodeo marketing.",
     extractedText:
       "Purpose: bring families and Rotary Club of Dripping Springs together, increase community awareness of Rotary, and raise funds for the Dripping Springs High School Scholarship Fund. Primary objectives: raise scholarship funds, increase Rotary awareness, create a fun family-focused community event, and encourage long-term community involvement. Target audiences: event attendees and local families; sponsors and prospective sponsors; vendors and prospective vendors; Stick Horse Showdown participants; silent auction donors; Rotary supporters and boosters; event volunteers; scholarship supporters; thank-you and recognition posts. Brand voice: polished, professional, friendly, approachable, family-oriented, community-focused, welcoming rather than sales-heavy, positive, energetic, and authentic. Core messaging: event benefits the Dripping Springs High School Scholarship Fund; funds raised support local students through scholarships; event is hosted by Rotary Club of Dripping Springs; families, businesses, and community members all help make the event successful. Reference website: https://backtoschoolrodeo.com. Public event site wording: BackToSchoolRodeo. Marketing channels: Facebook and Instagram. Agent guidance: identify the audience first and tailor messaging accordingly while staying consistent with brand voice; avoid overly corporate language or aggressive sales tactics; focus on community, participation, generosity, and positive local impact.",
+  },
+  {
+    id: "source-nonprofit-social-copy-framework",
+    campaignSlug: "back-to-school-rotary-rodeo",
+    title:
+      "Professional Training Manual and Operational Plan: Facebook and Instagram Copywriting and Marketing Framework",
+    sourceType: "uploaded_file",
+    scope: "rotary_wide",
+    status: "ingested",
+    sourceUrl:
+      "file:/Users/carissaholmes/.codex/attachments/a05a6193-5e2f-42a8-8155-620ce4e2019f/pasted-text.txt",
+    accessNote:
+      "Nonprofit social media copywriting framework supplied by owner and ingested as ongoing agent training.",
+    capturedFrom: "Pasted training manual, July 18, 2026",
+    summary:
+      "Adds Rotary People of Action brand framing, platform-specific Facebook and Instagram rules, AIDA/PASO/BAB copy structures, audience strategies for attendees/sponsors/vendors, specificity safeguards, and future Meta performance tracking guidance.",
+    extractedText:
+      "Use Rotary's Service Above Self identity and People of Action framing. Voice attributes are persevering, inspiring, compassionate, and smart. Tell nonprofit impact stories through protagonist focus, relatable local problem, turning point, specific outcome, and supporter invitation. Facebook can carry fuller context, direct links, comment/share prompts, and 1 to 2 relevant hashtags. Instagram should be shorter, visual-first, save/share-oriented, with link-in-bio direction and hashtag blocks outside the main narrative when appropriate. Use AIDA for broad attendee/ticket awareness, PASO for urgency-driven vendor/sponsor/deadline posts, and BAB for storytelling, sponsor validation, and stewardship. Segment copy for attendees, sponsors, and vendors: attendees need family entertainment plus scholarship impact and official buying paths; sponsors need community partnership, brand exposure, CSR value, and proof of visibility; vendors need foot traffic, booth value, simple application, logistics, category protection when approved, and local visibility. Use specific facts and a clear reason behind each ask, but never invent attendance, prices, scholarship amounts, deadlines, sponsor benefits, category caps, logistics, or performance claims. Future optimization should connect creative asset, suggested copy, finalized copy, and Meta performance metrics such as reach, impressions, engagement, saves, shares, comments, CTR, website clicks, and sponsor-specific visibility.",
   },
 ];
 
