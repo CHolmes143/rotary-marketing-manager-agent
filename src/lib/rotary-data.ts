@@ -391,7 +391,61 @@ export const campaigns: Campaign[] = [
         category: "voice",
         label: "Facebook and Instagram copy rules",
         value:
-          "Do not cross-post identical copy. Facebook can use fuller context, direct links, local discussion prompts, and 1 to 2 highly relevant hashtags. Instagram should be shorter, visual-first, save/share-oriented, and use a clean caption with link-in-bio style CTA when appropriate; hashtag blocks belong outside the main narrative when possible.",
+          "Treat Facebook and Instagram as delivery channels after the correct post format is selected. During this phase, use the same approved copy for matching Meta formats such as Reels, Posts, Stories, and Carousels, then optimize future learning by post type and performance.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-post-type-routing",
+        category: "creative_strategy",
+        label: "Post type routing",
+        value:
+          "Route creative by format before platform. Reels fit raw, human-focused, dynamic video that can open with an immediate hook. Carousels fit sequential, educational, before-and-after, data, or step-by-step content. Static Feed Posts fit permanent brand updates, milestones, partnership announcements, merchandise launches, and single high-clarity event graphics. Stories fit urgent reminders, deadline/countdown alerts, casual behind-the-scenes updates, and interactive mobile actions. Live Video fits real-time interactive broadcasts, panels, or field updates.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-reel-guidance",
+        category: "creative_strategy",
+        label: "Reel guidance",
+        value:
+          "Reels are reach-first and should use authentic motion, a human face or clear action in the first three seconds, vertical 9:16 framing, high-contrast captions, direct shares, and a short narrative arc. Avoid abstract, over-produced, confusing metaphors that distance viewers from the people or event.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-carousel-guidance",
+        category: "creative_strategy",
+        label: "Carousel guidance",
+        value:
+          "Carousels are engagement, education, saves, and shares-first. Use 5 to 7 visually consistent slides, a strong first-slide hook, bite-sized information, swipe logic, and an early CTA. Avoid disconnected slides, dense paragraphs, and inconsistent branding.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-static-post-guidance",
+        category: "creative_strategy",
+        label: "Static Feed Post guidance",
+        value:
+          "Static Feed Posts should anchor high-clarity announcements, event details, milestones, and partnership recognition. Use one strong visual, clear contrast, 4:5 portrait framing, keyword-rich captioning, and community interaction after posting. Avoid repetitive flyer-only posting when the image lacks original, outcome-focused, or human context.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-story-guidance",
+        category: "creative_strategy",
+        label: "Story guidance",
+        value:
+          "Stories should support urgent, casual, or interactive updates. Use short vertical frames, countdowns, polls, questions, sliders, and link stickers when relevant. Keep important text, faces, and graphics away from the top 15 percent and bottom 20 percent of the frame.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
+        id: "fact-creative-technical-specs",
+        category: "creative_strategy",
+        label: "Creative technical specs",
+        value:
+          "Use 9:16 vertical format at 1080 x 1920 for Reels and Stories. Use 4:5 portrait format at 1080 x 1350 for Feed Posts and Carousels. Avoid landscape crops when possible because they take less vertical screen space and reduce scroll-stopping power.",
         status: "approved",
         stability: "permanent",
       },
@@ -506,6 +560,24 @@ export const trainingSources: TrainingSource[] = [
       "Adds official event date, time, venue, free admission/parking, family attractions, vendor positioning and logistics, Stick Horse Showdown positioning, Booster donor positioning, and silent auction call-to-action details.",
     extractedText:
       "Annual Back-To-School Rotary Rodeo is Saturday, September 5, 2026, 12PM to 6PM at Dripping Springs Distilling. Website emphasizes free parking and admission, vendors, silent auction, live horses, Stick Horse Races, live music, Rotary Prize Wheel, and bounce house. Vendors are positioned around 6 hours of promoting products and services to hundreds of local families. Vendor fees are tax-deductible donations: businesses $50 and non-profits $30. Vendor setup begins at 11AM; event runs 12PM to 6PM; cleanup is 6PM to 7PM; setup/pack-up assistance available; address is 5330 Bell Springs Road, Dripping Springs, Texas; event is rain or shine. Attendees are primarily families with children ages 0 to 15 and spend several hours at the event, with steady flow from 1PM on. Event vibe is a casual western rodeo for the whole family. Non-profits/service vendors should offer a simple kid-friendly activity. Dripping Springs Distilling has a menu, so full food vendors are discouraged; treats like cotton candy and snow cones fit well. Stick Horse Showdown is for local professionals and businesses to compete for bragging rights and community recognition by sponsoring a stick horse while putting their brand in front of hundreds of Dripping Springs families. Stick Horse sponsorship is a $100 tax-deductible donation. Sponsors can race, send a teammate, or have a crowd volunteer race while they cheer. Rotary Booster donors who give $25 or more can be named on the large event-day Thank You Banner. Silent auction supporters can donate a product, service, or experience.",
+  },
+  {
+    id: "source-rotary-creative-process-post-type-report",
+    campaignSlug: "back-to-school-rotary-rodeo",
+    title:
+      "The Rotary Creative Process: Algorithmic and Decision-Making Report on Nonprofit Social Media Optimization",
+    sourceType: "uploaded_file",
+    scope: "rotary_wide",
+    status: "ingested",
+    sourceUrl:
+      "file:/Users/carissaholmes/.codex/attachments/c5ba4dd4-16b0-45e1-893d-8ddafff6d102/pasted-text.txt",
+    accessNote:
+      "Post-type-first creative process report supplied by owner and ingested as ongoing agent training.",
+    capturedFrom: "Pasted creative process report, July 18, 2026",
+    summary:
+      "Reframes Rotary creative decisions around post format rather than platform, with routing rules for Reels, Carousels, Static Feed Posts, Stories, and Live Video plus safe-zone and aspect-ratio guidance.",
+    extractedText:
+      "The Rotary Creative Process categorizes content by post format before platform. Reels are reach-first short-form video with strong motion, a human or action hook in the first three seconds, completion/loop/share signals, and 9:16 vertical framing. Carousels are engagement and save-first educational assets, especially for sequential, before-and-after, data, or step-by-step content; use 5 to 7 consistent 4:5 slides, a strong first-slide hook, bite-sized information, swipe logic, and early CTA. Static Feed Posts fit high-clarity announcements, milestone updates, partnership recognition, merchandise launches, and single high-contrast event graphics; use 4:5 portrait format and avoid repetitive low-context flyers. Stories fit urgent reminders, deadline or countdown alerts, casual behind-the-scenes updates, and interactive mobile actions; use short 9:16 frames, polls, questions, sliders, countdowns, and link stickers while keeping key text/faces away from the top 15 percent and bottom 20 percent. Live Video fits real-time interactive broadcasts, panels, event updates, and Q&A. Technical standards: Reels and Stories should be 1080 x 1920; Feed Posts and Carousels should be 1080 x 1350; landscape crops should be avoided because they reduce scroll-stopping space. Social should feed an integrated journey: Reels and Live Video for discovery, Carousels and Stories for consideration and education, Static Posts and landing pages for high-intent conversion, and email for longer-term donor relationships.",
   },
 ];
 

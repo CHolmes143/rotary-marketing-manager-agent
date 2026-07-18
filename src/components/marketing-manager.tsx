@@ -143,12 +143,21 @@ export function MarketingManager({
   const parsedContentType = parseResult.contentType ?? "Unconfirmed content type";
   const postType = suitablePostType(assetKind, filename, parseResult);
 
-  function generateCopyForContext(nextFilename: string) {
+  function generateCopyForContext(
+    nextFilename: string,
+    nextAssetKind = assetKind,
+  ) {
     const nextParseResult = parseCreativeFilename(nextFilename, campaign.name);
+    const nextPostType = suitablePostType(
+      nextAssetKind,
+      nextFilename,
+      nextParseResult,
+    );
     const drafts = generatePlatformDrafts(
       campaign,
       nextParseResult,
       nextParseResult.contentType ?? "Unconfirmed content type",
+      nextPostType,
     );
     const sharedPostTypeDraft = drafts.facebook;
     setSuggestedCopy(sharedPostTypeDraft);
@@ -189,11 +198,12 @@ export function MarketingManager({
 
   function handleFileUpload(file: File | undefined) {
     if (!file) return;
+    const nextAssetKind = file.type.startsWith("video") ? "video" : "image";
     setFilename(file.name);
-    setAssetKind(file.type.startsWith("video") ? "video" : "image");
+    setAssetKind(nextAssetKind);
     setAssetUrl(URL.createObjectURL(file));
     setHasUploadedCreative(true);
-    generateCopyForContext(file.name);
+    generateCopyForContext(file.name, nextAssetKind);
   }
 
   function handleFilenameChange(value: string) {

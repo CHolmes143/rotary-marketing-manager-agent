@@ -30,6 +30,15 @@ export function suitablePostType(
   parseResult: Pick<FilenameParseResult, "contentType" | "subject" | "assetPurpose">,
 ) {
   const requestedPostType = derivePostType(filename, parseResult);
+  const context = [
+    filename,
+    parseResult.contentType,
+    parseResult.subject,
+    parseResult.assetPurpose,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
 
   if (assetKind === "video") {
     if (requestedPostType === "Story") return "Story";
@@ -39,6 +48,9 @@ export function suitablePostType(
   if (assetKind === "image") {
     if (requestedPostType === "Carousel") return "Carousel";
     if (requestedPostType === "Story") return "Story";
+    if (/\b(urgent|reminder|deadline|countdown|matching|last chance|today|tomorrow)\b/.test(context)) {
+      return "Story";
+    }
     return "Post";
   }
 

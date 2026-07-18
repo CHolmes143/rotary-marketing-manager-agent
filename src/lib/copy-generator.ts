@@ -147,10 +147,43 @@ function applyTerminologyRules(copy: string) {
     .replace(/\bBack to School Rodeo\b/g, "BackToSchoolRodeo");
 }
 
+function postTypeOpening(postType: string, audience: string, eventName: string) {
+  if (postType === "Reel") {
+    return `A quick look at why ${eventName} matters for ${audience}.`;
+  }
+
+  if (postType === "Carousel") {
+    return `Swipe through the details ${audience} need for ${eventName}.`;
+  }
+
+  if (postType === "Story") {
+    return `${eventName} update for ${audience}.`;
+  }
+
+  return `Calling ${audience}: ${eventName} is built by the community, for the community.`;
+}
+
+function postTypeExecutionLine(postType: string) {
+  if (postType === "Reel") {
+    return "Use this with a vertical video hook, clear captions, and visible human action in the first few seconds.";
+  }
+
+  if (postType === "Carousel") {
+    return "Use this with a strong first slide, simple swipe-by-swipe details, and the CTA before the final slide.";
+  }
+
+  if (postType === "Story") {
+    return "Use this with a countdown, poll, question, slider, or link sticker when available.";
+  }
+
+  return "Use this as an anchor caption for a clear 4:5 feed graphic.";
+}
+
 export function generatePlatformDrafts(
   campaign: Campaign,
   parseResult: FilenameParseResult,
   confirmedContentType: string,
+  postType = "Post",
 ): PlatformDrafts {
   const eventName = factValue(campaign, "event_identity") ?? campaign.name;
   const beneficiary =
@@ -185,11 +218,13 @@ export function generatePlatformDrafts(
         : "Event details: BackToSchoolRodeo";
 
   const facebook = [
-      `Calling ${audience}: ${eventName} is built by the community, for the community.`,
+      postTypeOpening(postType, audience, eventName),
       "",
       goalLine,
       "",
       ...detailLines.flatMap((line) => [line, ""]),
+      postTypeExecutionLine(postType),
+      "",
       `The heart of the event is simple: ${purposeFact}`,
       "",
       beneficiary,
