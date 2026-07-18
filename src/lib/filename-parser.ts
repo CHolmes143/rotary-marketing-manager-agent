@@ -22,15 +22,19 @@ function stripExtension(filename: string) {
   return filename.replace(/\.[^/.]+$/, "");
 }
 
+function stripFinderCopySuffix(segment: string) {
+  return segment.replace(/\s+\(\d+\)$/g, "");
+}
+
 function humanizeSegment(segment: string) {
-  return segment
+  return stripFinderCopySuffix(segment)
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[-]+/g, " ")
     .trim();
 }
 
 function getCampaign(segment: string | undefined) {
-  const normalizedCampaign = segment ? normalizeToken(segment) : "";
+  const normalizedCampaign = segment ? normalizeToken(stripFinderCopySuffix(segment)) : "";
 
   return (
     campaignAliases.get(normalizedCampaign) ??
@@ -40,7 +44,7 @@ function getCampaign(segment: string | undefined) {
 }
 
 function getContentType(segment: string | undefined) {
-  return segment ? contentTypeAliases.get(normalizeToken(segment)) : undefined;
+  return segment ? contentTypeAliases.get(normalizeToken(stripFinderCopySuffix(segment))) : undefined;
 }
 
 function parseFlexibleFilename(
@@ -51,8 +55,11 @@ function parseFlexibleFilename(
     "Filename does not use the full naming pattern, so the agent will make a best-effort draft using the selected campaign and available filename details.",
   ];
   const versionCandidate = segments.at(-1);
-  const version = /^v\d+$/i.test(versionCandidate ?? "")
-    ? versionCandidate
+  const cleanedVersionCandidate = versionCandidate
+    ? stripFinderCopySuffix(versionCandidate)
+    : undefined;
+  const version = /^v\d+$/i.test(cleanedVersionCandidate ?? "")
+    ? cleanedVersionCandidate
     : undefined;
   const workingSegments = version ? segments.slice(0, -1) : segments;
   const explicitCampaign = getCampaign(workingSegments[0]);
@@ -96,7 +103,10 @@ export function parseCreativeFilename(
     };
   }
 
-  const segments = stripExtension(filename).split("_").filter(Boolean);
+  const segments = stripExtension(filename)
+    .split("_")
+    .filter(Boolean)
+    .map(stripFinderCopySuffix);
 
   if (segments.length !== 5) {
     return parseFlexibleFilename(segments, selectedCampaignName);
@@ -107,6 +117,29 @@ export function parseCreativeFilename(
     segments;
 
   const campaign = getCampaign(campaignSegment);
+  const contentType = getContentType(contentTypeSegment);
+
+  if (!campaign && contentType) {
+    const versionValue = /^v\d+$/i.test(version) ? version : undefined;
+    const versionWarning = versionValue
+      ? []
+      : [
+          "Filename version was not exact, so the agent will still make a best-effort draft using the available context.",
+        ];
+
+    return {
+      status: "partial",
+      campaign: selectedCampaignName,
+      contentType,
+      subject: humanizeSegment(`${campaignSegment} ${subject}`),
+      assetPurpose: assetPurpose ? humanizeSegment(assetPurpose) : undefined,
+      version: versionValue,
+      warnings: [
+        "Filename starts with audience/context instead of campaign, so the selected campaign will be used.",
+        ...versionWarning,
+      ],
+    };
+  }
 
   if (!campaignSegment) {
     warnings.push("Missing campaign segment.");
@@ -117,8 +150,6 @@ export function parseCreativeFilename(
       `Filename campaign "${campaign}" does not match selected campaign "${selectedCampaignName}".`,
     );
   }
-
-  const contentType = getContentType(contentTypeSegment);
 
   if (!contentTypeSegment) {
     warnings.push("Missing content type segment.");

@@ -211,6 +211,7 @@ export function MarketingManager({
       : parseResult.status === "partial"
         ? "warning"
         : "danger";
+  const pendingFacts = draftFacts(campaign);
 
   return (
     <main className="min-h-screen bg-[#f7f5ef] text-stone-950">
@@ -261,31 +262,33 @@ export function MarketingManager({
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Badge tone="good">Active</Badge>
-              <Badge tone="warning">Placeholder facts</Badge>
+              <Badge tone="good">Knowledge current</Badge>
             </div>
           </section>
 
-          <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center gap-2">
-              <AlertTriangle size={16} className="text-amber-600" />
-              <h2 className="text-sm font-semibold">Needs Approval</h2>
-            </div>
-            <div className="space-y-2">
-              {draftFacts(campaign).map((fact) => (
-                <div
-                  key={fact.id}
-                  className="rounded-md border border-amber-200 bg-amber-50 p-3"
-                >
-                  <p className="text-xs font-semibold text-amber-950">
-                    {fact.label}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-amber-900">
-                    {fact.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {pendingFacts.length > 0 ? (
+            <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
+              <div className="mb-3 flex items-center gap-2">
+                <AlertTriangle size={16} className="text-amber-600" />
+                <h2 className="text-sm font-semibold">Needs Approval</h2>
+              </div>
+              <div className="space-y-2">
+                {pendingFacts.map((fact) => (
+                  <div
+                    key={fact.id}
+                    className="rounded-md border border-amber-200 bg-amber-50 p-3"
+                  >
+                    <p className="text-xs font-semibold text-amber-950">
+                      {fact.label}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 text-amber-900">
+                      {fact.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center gap-2">
@@ -309,7 +312,9 @@ export function MarketingManager({
                           {source.accessNote}
                         </p>
                       </div>
-                      <Badge tone="blue">Pending</Badge>
+                      <Badge tone={source.status === "ingested" ? "good" : "blue"}>
+                        {source.status === "ingested" ? "Ingested" : "Pending"}
+                      </Badge>
                     </div>
                   </div>
                 ))}
