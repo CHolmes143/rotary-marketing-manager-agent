@@ -206,25 +206,122 @@ export const campaigns: Campaign[] = [
         id: "fact-location",
         category: "location",
         label: "Location",
-        value: "Dripping Springs, Texas",
-        status: "draft",
+        value:
+          "Dripping Springs Distilling, 5330 Bell Springs Road, Dripping Springs, Texas.",
+        status: "approved",
         stability: "annual_review",
       },
       {
         id: "fact-date",
         category: "date_time",
         label: "Date and time",
-        value: "Placeholder date and time pending owner approval.",
-        status: "draft",
+        value: "Saturday, September 5, 2026, from 12PM to 6PM.",
+        status: "approved",
         stability: "annual_review",
       },
       {
         id: "fact-cta",
         category: "cta",
         label: "Primary CTA",
-        value: "Watch for official Rotary updates and registration details.",
-        status: "draft",
+        value: "Use BackToSchoolRodeo for official event details and calls to action.",
+        status: "approved",
         stability: "temporary",
+      },
+      {
+        id: "fact-admission",
+        category: "pricing",
+        label: "Admission and parking",
+        value: "Free parking and free admission.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-family-attractions",
+        category: "attraction",
+        label: "Family attractions",
+        value:
+          "Vendors, silent auction, live horses, Stick Horse Races, live music, Rotary Prize Wheel, and bounce house.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-vendor-positioning",
+        category: "vendor",
+        label: "Vendor positioning",
+        value:
+          "Vendor audience is primarily families with children ages 0 to 15 who spend several hours at the event. Vendors receive 6 hours to promote products and services to hundreds of local families, with a steady attendee flow from 1PM on.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-vendor-fees",
+        category: "pricing",
+        label: "Vendor fees",
+        value:
+          "Vendor fees are tax-deductible donations: businesses are $50 and non-profit organizations are $30.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-vendor-logistics",
+        category: "vendor",
+        label: "Vendor logistics",
+        value:
+          "Vendor setup begins at 11AM. Event runs 12PM to 6PM. Cleanup/pack-up is 6PM to 7PM. Setup/pack-up assistance will be available. Vendors can unload close to their setup area before parking for the event. Event is rain or shine. Vendors needing electricity should bring their own power source.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-vendor-fit",
+        category: "vendor",
+        label: "Vendor fit",
+        value:
+          "The event is a casual western rodeo that is fun for the whole family, including older and middle-school-aged children. Local eats, treats, leather accessories, unique finds, and community organizations fit the event. Food vendors are discouraged because Dripping Springs Distilling has a full menu, but treats like cotton candy and snow cones are a strong fit. Non-profits and service vendors should offer a simple kid-friendly activity at the table.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-stick-horse-positioning",
+        category: "attraction",
+        label: "Stick Horse Showdown positioning",
+        value:
+          "Stick Horse Showdown is an event-day race where local professionals and businesses compete for bragging rights and community recognition by sponsoring a stick horse while putting their brand in front of hundreds of Dripping Springs families.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-stick-horse-fee",
+        category: "pricing",
+        label: "Stick Horse Showdown fee",
+        value: "Stick Horse Showdown sponsorship registration fee is a $100 tax-deductible donation.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-stick-horse-participation",
+        category: "attraction",
+        label: "Stick Horse Showdown participation",
+        value:
+          "Sponsors may show up and race, send a teammate, or let Rotary find a volunteer from the crowd while the sponsor cheers them on. Rotary will provide event updates and ready-to-share social media assets before the event.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-booster",
+        category: "cta",
+        label: "Rotary Booster",
+        value:
+          "Rotary Booster donors who give $25 or more can be named on the large event-day Thank You Banner.",
+        status: "approved",
+        stability: "annual_review",
+      },
+      {
+        id: "fact-silent-auction",
+        category: "cta",
+        label: "Silent auction",
+        value: "Silent auction supporters may donate a product, service, or experience.",
+        status: "approved",
+        stability: "annual_review",
       },
       {
         id: "fact-voice",
@@ -240,7 +337,7 @@ export const campaigns: Campaign[] = [
         category: "voice",
         label: "Core messaging",
         value:
-          "When appropriate, reinforce that the event benefits the Dripping Springs High School Scholarship Fund, supports local students through scholarships, is hosted by Rotary Club of Dripping Springs, and succeeds because families, businesses, and community members participate.",
+          "Use scholarship impact, Rotary Club of Dripping Springs host credibility, and community participation as underlying themes. Do not quote internal messaging guidance verbatim in public copy.",
         status: "approved",
         stability: "annual_review",
       },
@@ -392,6 +489,23 @@ export const trainingSources: TrainingSource[] = [
       "Adds Rotary People of Action brand framing, platform-specific Facebook and Instagram rules, AIDA/PASO/BAB copy structures, audience strategies for attendees/sponsors/vendors, specificity safeguards, and future Meta performance tracking guidance.",
     extractedText:
       "Use Rotary's Service Above Self identity and People of Action framing. Voice attributes are persevering, inspiring, compassionate, and smart. Tell nonprofit impact stories through protagonist focus, relatable local problem, turning point, specific outcome, and supporter invitation. Facebook can carry fuller context, direct links, comment/share prompts, and 1 to 2 relevant hashtags. Instagram should be shorter, visual-first, save/share-oriented, with link-in-bio direction and hashtag blocks outside the main narrative when appropriate. Use AIDA for broad attendee/ticket awareness, PASO for urgency-driven vendor/sponsor/deadline posts, and BAB for storytelling, sponsor validation, and stewardship. Segment copy for attendees, sponsors, and vendors: attendees need family entertainment plus scholarship impact and official buying paths; sponsors need community partnership, brand exposure, CSR value, and proof of visibility; vendors need foot traffic, booth value, simple application, logistics, category protection when approved, and local visibility. Use specific facts and a clear reason behind each ask, but never invent attendance, prices, scholarship amounts, deadlines, sponsor benefits, category caps, logistics, or performance claims. Future optimization should connect creative asset, suggested copy, finalized copy, and Meta performance metrics such as reach, impressions, engagement, saves, shares, comments, CTR, website clicks, and sponsor-specific visibility.",
+  },
+  {
+    id: "source-back-to-school-rodeo-website-review",
+    campaignSlug: "back-to-school-rotary-rodeo",
+    title: "BackToSchoolRodeo Website Audience Positioning Review",
+    sourceType: "manual_note",
+    scope: "campaign",
+    status: "ingested",
+    sourceUrl: "https://www.backtoschoolrodeo.com",
+    accessNote:
+      "Public event website reviewed and converted into audience-specific campaign knowledge.",
+    capturedFrom:
+      "BackToSchoolRodeo website pages: home, vendors, sponsorships, stick-horse-showdown, and booster. Reviewed July 18, 2026.",
+    summary:
+      "Adds official event date, time, venue, free admission/parking, family attractions, vendor positioning and logistics, Stick Horse Showdown positioning, Booster donor positioning, and silent auction call-to-action details.",
+    extractedText:
+      "Annual Back-To-School Rotary Rodeo is Saturday, September 5, 2026, 12PM to 6PM at Dripping Springs Distilling. Website emphasizes free parking and admission, vendors, silent auction, live horses, Stick Horse Races, live music, Rotary Prize Wheel, and bounce house. Vendors are positioned around 6 hours of promoting products and services to hundreds of local families. Vendor fees are tax-deductible donations: businesses $50 and non-profits $30. Vendor setup begins at 11AM; event runs 12PM to 6PM; cleanup is 6PM to 7PM; setup/pack-up assistance available; address is 5330 Bell Springs Road, Dripping Springs, Texas; event is rain or shine. Attendees are primarily families with children ages 0 to 15 and spend several hours at the event, with steady flow from 1PM on. Event vibe is a casual western rodeo for the whole family. Non-profits/service vendors should offer a simple kid-friendly activity. Dripping Springs Distilling has a menu, so full food vendors are discouraged; treats like cotton candy and snow cones fit well. Stick Horse Showdown is for local professionals and businesses to compete for bragging rights and community recognition by sponsoring a stick horse while putting their brand in front of hundreds of Dripping Springs families. Stick Horse sponsorship is a $100 tax-deductible donation. Sponsors can race, send a teammate, or have a crowd volunteer race while they cheer. Rotary Booster donors who give $25 or more can be named on the large event-day Thank You Banner. Silent auction supporters can donate a product, service, or experience.",
   },
 ];
 

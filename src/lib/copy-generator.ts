@@ -16,19 +16,21 @@ function factLabelValue(campaign: Campaign, label: string) {
 }
 
 function scholarshipImpactLine(audience: string) {
-  if (audience.includes("sponsor") || audience.includes("business")) {
+  const normalizedAudience = audience.toLowerCase();
+
+  if (normalizedAudience.includes("sponsor") || normalizedAudience.includes("business")) {
     return "Sponsorship helps turn community support into scholarship opportunities for local students.";
   }
 
-  if (audience.includes("vendor")) {
+  if (normalizedAudience.includes("vendor")) {
     return "Vendor participation helps make the day feel welcoming, local, and full of community energy.";
   }
 
-  if (audience.includes("donor") || audience.includes("auction")) {
+  if (normalizedAudience.includes("donor") || normalizedAudience.includes("auction")) {
     return "Every donated item helps build momentum for scholarships that support local students.";
   }
 
-  if (audience.includes("volunteer")) {
+  if (normalizedAudience.includes("volunteer")) {
     return "Volunteer support helps create the kind of event families remember and students benefit from.";
   }
 
@@ -36,13 +38,16 @@ function scholarshipImpactLine(audience: string) {
 }
 
 function audienceKind(audience: string) {
-  if (audience.includes("vendor")) return "vendor";
-  if (audience.includes("sponsor") || audience.includes("business")) {
+  const normalizedAudience = audience.toLowerCase();
+
+  if (normalizedAudience.includes("vendor")) return "vendor";
+  if (normalizedAudience.includes("stick horse")) return "stick_horse";
+  if (normalizedAudience.includes("sponsor") || normalizedAudience.includes("business")) {
     return "sponsor";
   }
-  if (audience.includes("donor") || audience.includes("auction")) return "donor";
-  if (audience.includes("volunteer")) return "volunteer";
-  if (audience.includes("participant") || audience.includes("families")) {
+  if (normalizedAudience.includes("donor") || normalizedAudience.includes("auction")) return "donor";
+  if (normalizedAudience.includes("volunteer")) return "volunteer";
+  if (normalizedAudience.includes("participant") || normalizedAudience.includes("families")) {
     return "attendee";
   }
 
@@ -86,6 +91,10 @@ function creativeGoalLine(audience: string, subject: string, purpose: string) {
     return "Vendor participation brings local flavor to the event and gives small businesses a meaningful way to be seen by the community.";
   }
 
+  if (kind === "stick_horse") {
+    return "Stick Horse Showdown gives local businesses a fun, visible way to join the day and be part of the community story.";
+  }
+
   if (kind === "sponsor") {
     return "Sponsorship is a visible community partnership: your business shows up for local families while helping create scholarship opportunities.";
   }
@@ -99,6 +108,37 @@ function creativeGoalLine(audience: string, subject: string, purpose: string) {
   }
 
   return "The event brings families, businesses, and neighbors together around a shared local purpose.";
+}
+
+function audienceDetailLines(campaign: Campaign, audience: string) {
+  const kind = audienceKind(audience);
+  const familyAttractions = factLabelValue(campaign, "Family attractions");
+  const admission = factLabelValue(campaign, "Admission and parking");
+  const dateTime = factLabelValue(campaign, "Date and time");
+  const location = factLabelValue(campaign, "Location");
+  const vendorPositioning = factLabelValue(campaign, "Vendor positioning");
+  const vendorFees = factLabelValue(campaign, "Vendor fees");
+  const stickHorsePositioning = factLabelValue(
+    campaign,
+    "Stick Horse Showdown positioning",
+  );
+  const stickHorseFee = factLabelValue(campaign, "Stick Horse Showdown fee");
+  const booster = factLabelValue(campaign, "Rotary Booster");
+  const silentAuction = factLabelValue(campaign, "Silent auction");
+
+  if (kind === "vendor") {
+    return [vendorPositioning, vendorFees].filter(Boolean) as string[];
+  }
+
+  if (kind === "stick_horse") {
+    return [stickHorsePositioning, stickHorseFee].filter(Boolean) as string[];
+  }
+
+  if (kind === "donor") {
+    return [silentAuction, booster].filter(Boolean) as string[];
+  }
+
+  return [dateTime, location, admission, familyAttractions].filter(Boolean) as string[];
 }
 
 function applyTerminologyRules(copy: string) {
@@ -126,15 +166,20 @@ export function generatePlatformDrafts(
   const impactLine = scholarshipImpactLine(audience);
   const goalLine = creativeGoalLine(audience, subject, purpose);
   const kind = audienceKind(audience);
+  const detailLines = audienceDetailLines(campaign, audience);
   const facebookCta =
     kind === "vendor"
       ? "Vendor spaces are limited. Register through BackToSchoolRodeo to be considered."
+      : kind === "stick_horse"
+        ? "Register through BackToSchoolRodeo and get ready to race, send a teammate, or cheer on a crowd volunteer."
       : kind === "sponsor"
         ? "Reach out for the sponsorship packet and partnership options."
         : "Follow Rotary Club of Dripping Springs for official updates and ways to get involved.";
   const instagramCta =
     kind === "vendor"
       ? "Vendor details: BackToSchoolRodeo"
+      : kind === "stick_horse"
+        ? "Showdown details: BackToSchoolRodeo"
       : kind === "sponsor"
         ? "Partnership details: BackToSchoolRodeo"
         : "Event details: BackToSchoolRodeo";
@@ -144,6 +189,7 @@ export function generatePlatformDrafts(
       "",
       goalLine,
       "",
+      ...detailLines.flatMap((line) => [line, ""]),
       `The heart of the event is simple: ${purposeFact}`,
       "",
       beneficiary,
@@ -157,12 +203,14 @@ export function generatePlatformDrafts(
       "",
       `Family-focused, community-powered, and rooted in local impact. ${goalLine}`,
       "",
+      detailLines[0] ?? "",
+      detailLines[0] ? "" : undefined,
       "Funds raised benefit the Dripping Springs High School Scholarship Fund.",
       "",
       instagramCta,
       "",
       "#DrippingSprings #RotaryClub #BackToSchoolRodeo #CommunityImpact",
-    ].join("\n");
+    ].filter((line): line is string => line !== undefined).join("\n");
 
   return {
     facebook: applyTerminologyRules(facebook),
