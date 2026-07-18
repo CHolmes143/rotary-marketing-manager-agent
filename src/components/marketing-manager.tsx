@@ -61,6 +61,10 @@ function PlatformCopyApproval({
   revisedCopy: string;
   onRevisedCopyChange: (value: string) => void;
 }) {
+  const hasEditableDraft = revisedCopy.trim().length > 0;
+  const hasOwnerRevision =
+    hasEditableDraft && revisedCopy.trim() !== suggestedCopy.trim();
+
   return (
     <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -70,8 +74,12 @@ function PlatformCopyApproval({
             Suggested copy with revised approved copy underneath
           </p>
         </div>
-        <Badge tone={revisedCopy.trim() ? "blue" : "neutral"}>
-          {revisedCopy.trim() ? "Owner revised" : "Suggested"}
+        <Badge tone={hasOwnerRevision ? "blue" : hasEditableDraft ? "good" : "neutral"}>
+          {hasOwnerRevision
+            ? "Owner revised"
+            : hasEditableDraft
+              ? "Ready to edit"
+              : "Suggested"}
         </Badge>
       </div>
 
@@ -95,10 +103,7 @@ function PlatformCopyApproval({
           className="mt-2 min-h-48 w-full resize-y rounded-md border border-stone-300 bg-white p-3 text-sm leading-6 text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
           value={revisedCopy}
           onChange={(event) => onRevisedCopyChange(event.target.value)}
-          placeholder={
-            suggestedCopy ||
-            `The ${platform} suggested copy will appear here as grey helper text after generation.`
-          }
+          placeholder={`Generate copy to create an editable ${platform} approval draft.`}
         />
       </label>
     </section>
@@ -145,8 +150,8 @@ export function MarketingManager({
     );
     setFacebookSuggestedCopy(drafts.facebook);
     setInstagramSuggestedCopy(drafts.instagram);
-    setFacebookRevisedCopy("");
-    setInstagramRevisedCopy("");
+    setFacebookRevisedCopy(drafts.facebook);
+    setInstagramRevisedCopy(drafts.instagram);
     setEditReason("");
   }
 
