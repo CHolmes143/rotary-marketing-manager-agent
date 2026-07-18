@@ -3,7 +3,6 @@
 import {
   AlertTriangle,
   Check,
-  ChevronDown,
   FileImage,
   FileVideo,
   Info,
@@ -465,26 +464,13 @@ export function MarketingManager({
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-7xl gap-5 px-5 py-5 lg:grid-cols-[290px_1fr]">
-        <aside className="space-y-4">
-          <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-            <label className="text-xs font-medium uppercase tracking-wide text-stone-500">
-              Current campaign
-            </label>
-            <button className="mt-2 flex w-full items-center justify-between rounded-md border border-stone-300 bg-white px-3 py-2 text-left text-sm font-semibold text-stone-900">
-              {campaign.name}
-              <ChevronDown size={16} />
-            </button>
-            <p className="mt-3 text-sm leading-6 text-stone-600">
-              {campaign.shortDescription}
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Badge tone="good">Active</Badge>
-              <Badge tone="good">Knowledge current</Badge>
-            </div>
-          </section>
-
-          {pendingFacts.length > 0 ? (
+      <div
+        className={`mx-auto grid max-w-7xl gap-5 px-5 py-5 ${
+          pendingFacts.length > 0 ? "lg:grid-cols-[290px_1fr]" : ""
+        }`}
+      >
+        {pendingFacts.length > 0 ? (
+          <aside className="space-y-4">
             <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
                 <AlertTriangle size={16} className="text-amber-600" />
@@ -506,9 +492,8 @@ export function MarketingManager({
                 ))}
               </div>
             </section>
-          ) : null}
-
-        </aside>
+          </aside>
+        ) : null}
 
         <div className="space-y-5">
           <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
