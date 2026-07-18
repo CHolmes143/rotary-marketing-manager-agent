@@ -402,6 +402,7 @@ export function MarketingManager({
     setAssetUrl(nextAssetUrl);
     setHasUploadedCreative(true);
     setCreativeAnalysis({ ...emptyCreativeAnalysis, status: "analyzing" });
+    generateCopyForContext(file.name, nextAssetKind, "");
 
     const nextAnalysis = await analyzeCreativeFile(
       file,
@@ -643,6 +644,9 @@ export function MarketingManager({
                     type="file"
                     accept="image/*,video/*"
                     className="sr-only"
+                    onClick={(event) => {
+                      event.currentTarget.value = "";
+                    }}
                     onChange={(event) =>
                       void handleFileUpload(event.target.files?.[0])
                     }
