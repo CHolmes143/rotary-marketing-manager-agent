@@ -451,11 +451,6 @@ export function MarketingManager({
             <h1 className="text-2xl font-semibold tracking-normal text-stone-950 md:text-3xl">
               Rotary Marketing Manager
             </h1>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-stone-600">
-              Campaign-based copy workspace for Rotary Club of Dripping Springs.
-              This build is isolated from CHRE, Custom Walkout Song, and the
-              Rotary Outreach App.
-            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
