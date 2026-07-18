@@ -2,7 +2,6 @@
 
 import {
   AlertTriangle,
-  BookOpenText,
   Check,
   ChevronDown,
   FileImage,
@@ -21,7 +20,6 @@ import type { LearningRecordView } from "@/lib/workspace-repository";
 import {
   campaigns,
   draftFacts,
-  trainingSources,
   type Campaign,
 } from "@/lib/rotary-data";
 
@@ -515,36 +513,6 @@ export function MarketingManager({
             </section>
           ) : null}
 
-          <section className="rounded-lg border border-stone-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center gap-2">
-              <BookOpenText size={16} className="text-[#17458f]" />
-              <h2 className="text-sm font-semibold">Training Sources</h2>
-            </div>
-            <div className="space-y-3">
-              {trainingSources
-                .filter((source) => source.campaignSlug === campaign.slug)
-                .map((source) => (
-                  <div
-                    key={source.id}
-                    className="rounded-md border border-sky-200 bg-sky-50 p-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold text-sky-950">
-                          {source.title}
-                        </p>
-                        <p className="mt-1 text-xs leading-5 text-sky-900">
-                          {source.accessNote}
-                        </p>
-                      </div>
-                      <Badge tone={source.status === "ingested" ? "good" : "blue"}>
-                        {source.status === "ingested" ? "Ingested" : "Pending"}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </section>
         </aside>
 
         <div className="space-y-5">
