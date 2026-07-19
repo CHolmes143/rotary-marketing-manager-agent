@@ -144,7 +144,39 @@ function applyTerminologyRules(copy: string) {
     .replace(/\bBack to School Rodeo\b/g, "BackToSchoolRodeo");
 }
 
-function postTypeOpening(postType: string, audience: string, eventName: string) {
+function safeCreativeHook(hookIdeas: string[]) {
+  const blockedPhrases = [
+    "creative context",
+    "average brightness",
+    "sampled",
+    "use this with",
+    "analysis",
+    "metadata",
+    "detected text",
+    "visual summary",
+    "frame",
+  ];
+
+  return hookIdeas.find((hook) => {
+    const normalizedHook = hook.toLowerCase();
+
+    return (
+      hook.trim().length >= 18 &&
+      hook.trim().length <= 170 &&
+      !blockedPhrases.some((phrase) => normalizedHook.includes(phrase))
+    );
+  })?.trim();
+}
+
+function postTypeOpening(
+  postType: string,
+  audience: string,
+  eventName: string,
+  hookIdeas: string[],
+) {
+  const creativeHook = safeCreativeHook(hookIdeas);
+  if (creativeHook) return creativeHook;
+
   const kind = audienceKind(audience);
 
   if (postType === "Reel") {
@@ -179,6 +211,7 @@ export function generatePlatformDrafts(
   parseResult: FilenameParseResult,
   confirmedContentType: string,
   postType = "Post",
+  hookIdeas: string[] = [],
 ): PlatformDrafts {
   const eventName = factValue(campaign, "event_identity") ?? campaign.name;
   const beneficiary =
@@ -210,7 +243,7 @@ export function generatePlatformDrafts(
         : "Event details: BackToSchoolRodeo";
 
   const facebook = [
-      postTypeOpening(postType, audience, eventName),
+      postTypeOpening(postType, audience, eventName, hookIdeas),
       "",
       ...(kind === "vendor" || kind === "stick_horse" ? [] : [goalLine, ""]),
       ...detailLines.slice(0, 3).flatMap((line) => [line, ""]),

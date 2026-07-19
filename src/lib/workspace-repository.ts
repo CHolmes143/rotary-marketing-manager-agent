@@ -34,6 +34,8 @@ export type FinalizeCopyInput = {
     detectedText?: string;
     visualSummary?: string;
     detectedSubjects?: string[];
+    copyAngles?: string[];
+    hookIdeas?: string[];
     confidence?: number;
     framesAnalyzed?: number;
     analysisWarnings?: string[];
@@ -304,10 +306,16 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         : "skipped",
       detectedText: input.creativeAnalysis.detectedText || null,
       visualSummary: input.creativeAnalysis.visualSummary || null,
-      detectedSubjects: input.creativeAnalysis.detectedSubjects ?? undefined,
+      detectedSubjects: {
+        subjects: input.creativeAnalysis.detectedSubjects ?? [],
+        copyAngles: input.creativeAnalysis.copyAngles ?? [],
+        hookIdeas: input.creativeAnalysis.hookIdeas ?? [],
+      },
       confidence: input.creativeAnalysis.confidence ?? null,
       framesAnalyzed: input.creativeAnalysis.framesAnalyzed ?? null,
-      modelUsed: "browser-media-sampler",
+      modelUsed: input.creativeAnalysis.hookIdeas?.length
+        ? "openai-vision-plus-browser-media-sampler"
+        : "browser-media-sampler",
       analysisWarnings: input.creativeAnalysis.analysisWarnings ?? [],
     },
   });

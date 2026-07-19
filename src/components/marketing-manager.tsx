@@ -29,9 +29,17 @@ type CreativeAnalysisState = {
   detectedText: string;
   visualSummary: string;
   detectedSubjects: string[];
+  copyAngles: string[];
+  hookIdeas: string[];
   confidence: number;
   framesAnalyzed: number;
   analysisWarnings: string[];
+  visionConfigured?: boolean;
+  visionModel?: string;
+};
+
+type CreativeAnalysisResult = CreativeAnalysisState & {
+  frameDataUrls: string[];
 };
 
 const emptyCreativeAnalysis: CreativeAnalysisState = {
@@ -39,6 +47,8 @@ const emptyCreativeAnalysis: CreativeAnalysisState = {
   detectedText: "",
   visualSummary: "",
   detectedSubjects: [],
+  copyAngles: [],
+  hookIdeas: [],
   confidence: 0,
   framesAnalyzed: 0,
   analysisWarnings: [],
@@ -84,7 +94,7 @@ function canvasFor(width: number, height: number) {
   return canvas;
 }
 
-async function analyzeImage(url: string): Promise<CreativeAnalysisState> {
+async function analyzeImage(url: string): Promise<CreativeAnalysisResult> {
   const image = new Image();
   image.src = url;
   await image.decode();
@@ -105,9 +115,12 @@ async function analyzeImage(url: string): Promise<CreativeAnalysisState> {
     detectedText: "",
     visualSummary: `Single ${orientation} image, ${image.naturalWidth}x${image.naturalHeight}, sampled brightness ${brightness}, contrast ${contrast}.`,
     detectedSubjects: [orientation, "single image"],
+    copyAngles: [],
+    hookIdeas: [],
     confidence: 0.55,
     framesAnalyzed: 1,
     analysisWarnings: warnings,
+    frameDataUrls: [canvas.toDataURL("image/jpeg", 0.72)],
   };
 }
 
@@ -130,7 +143,7 @@ function waitForVideoEvent(video: HTMLVideoElement, eventName: string) {
   });
 }
 
-async function analyzeVideo(url: string): Promise<CreativeAnalysisState> {
+async function analyzeVideo(url: string): Promise<CreativeAnalysisResult> {
   const video = document.createElement("video");
   video.src = url;
   video.muted = true;
@@ -149,12 +162,14 @@ async function analyzeVideo(url: string): Promise<CreativeAnalysisState> {
   const canvas = canvasFor(video.videoWidth, video.videoHeight);
   const context = canvas.getContext("2d");
   const samples: Array<{ brightness: number; contrast: number }> = [];
+  const frameDataUrls: string[] = [];
 
   for (const time of uniqueSampleTimes) {
     video.currentTime = Math.min(time, Math.max(0, duration - 0.05));
     await waitForVideoEvent(video, "seeked");
     context?.drawImage(video, 0, 0, canvas.width, canvas.height);
     samples.push(analyzeCanvas(canvas));
+    frameDataUrls.push(canvas.toDataURL("image/jpeg", 0.72));
   }
 
   const avgBrightness = Math.round(
@@ -180,9 +195,12 @@ async function analyzeVideo(url: string): Promise<CreativeAnalysisState> {
     detectedText: "",
     visualSummary: `${orientation} video, ${video.videoWidth}x${video.videoHeight}, ${duration.toFixed(1)} seconds, sampled ${samples.length} representative frames, average brightness ${avgBrightness}, average contrast ${avgContrast}.`,
     detectedSubjects: [orientation, "video", `${samples.length} sampled frames`],
+    copyAngles: [],
+    hookIdeas: [],
     confidence: 0.6,
     framesAnalyzed: samples.length,
     analysisWarnings: warnings,
+    frameDataUrls,
   };
 }
 
@@ -190,7 +208,7 @@ async function analyzeCreativeFile(
   file: File,
   url: string,
   assetKind: "image" | "video",
-): Promise<CreativeAnalysisState> {
+): Promise<CreativeAnalysisResult> {
   try {
     return assetKind === "video" ? await analyzeVideo(url) : await analyzeImage(url);
   } catch (error) {
@@ -200,8 +218,88 @@ async function analyzeCreativeFile(
       analysisWarnings: [
         error instanceof Error ? error.message : "Creative analysis failed.",
       ],
+      frameDataUrls: [],
     };
   }
+}
+
+async function runVisionAnalysis({
+  filename,
+  postType,
+  assetKind,
+  frameDataUrls,
+  browserSummary,
+}: {
+  filename: string;
+  postType: string;
+  assetKind: "image" | "video";
+  frameDataUrls: string[];
+  browserSummary: string;
+}): Promise<Partial<CreativeAnalysisState>> {
+  if (frameDataUrls.length === 0) {
+    return {
+      analysisWarnings: ["No visual frames were available for AI analysis."],
+      visionConfigured: false,
+    };
+  }
+
+  try {
+    const response = await fetch("/api/creative-vision", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename,
+        postType,
+        assetKind,
+        frameDataUrls: frameDataUrls.slice(0, 5),
+        browserSummary,
+      }),
+    });
+    const payload = (await response.json()) as Partial<CreativeAnalysisState> & {
+      ok?: boolean;
+      configured?: boolean;
+      model?: string;
+    };
+
+    return {
+      detectedText: payload.detectedText ?? "",
+      visualSummary: payload.visualSummary ?? "",
+      detectedSubjects: payload.detectedSubjects ?? [],
+      copyAngles: payload.copyAngles ?? [],
+      hookIdeas: payload.hookIdeas ?? [],
+      confidence: payload.confidence ?? 0,
+      analysisWarnings: payload.analysisWarnings ?? [],
+      visionConfigured: payload.configured,
+      visionModel: payload.model,
+    };
+  } catch (error) {
+    return {
+      analysisWarnings: [
+        error instanceof Error
+          ? `AI vision request failed: ${error.message}`
+          : "AI vision request failed.",
+      ],
+      visionConfigured: false,
+    };
+  }
+}
+
+function stripInternalFrameData(
+  analysis: CreativeAnalysisResult,
+): CreativeAnalysisState {
+  return {
+    status: analysis.status,
+    detectedText: analysis.detectedText,
+    visualSummary: analysis.visualSummary,
+    detectedSubjects: analysis.detectedSubjects,
+    copyAngles: analysis.copyAngles,
+    hookIdeas: analysis.hookIdeas,
+    confidence: analysis.confidence,
+    framesAnalyzed: analysis.framesAnalyzed,
+    analysisWarnings: analysis.analysisWarnings,
+    visionConfigured: analysis.visionConfigured,
+    visionModel: analysis.visionModel,
+  };
 }
 
 function Badge({
@@ -326,6 +424,7 @@ export function MarketingManager({
   function generateCopyForContext(
     nextFilename: string,
     nextAssetKind = assetKind,
+    hookIdeas: string[] = creativeAnalysis.hookIdeas,
   ) {
     const nextParseResult = parseCreativeFilename(nextFilename, campaign.name);
     const nextPostType = suitablePostType(
@@ -338,6 +437,7 @@ export function MarketingManager({
       nextParseResult,
       nextParseResult.contentType ?? "Unconfirmed content type",
       nextPostType,
+      hookIdeas,
     );
     const sharedPostTypeDraft = drafts.facebook;
     setSuggestedCopy(sharedPostTypeDraft);
@@ -367,6 +467,8 @@ export function MarketingManager({
           detectedText: creativeAnalysis.detectedText,
           visualSummary: creativeAnalysis.visualSummary,
           detectedSubjects: creativeAnalysis.detectedSubjects,
+          copyAngles: creativeAnalysis.copyAngles,
+          hookIdeas: creativeAnalysis.hookIdeas,
           confidence: creativeAnalysis.confidence,
           framesAnalyzed: creativeAnalysis.framesAnalyzed,
           analysisWarnings: creativeAnalysis.analysisWarnings,
@@ -399,16 +501,67 @@ export function MarketingManager({
     setCreativeAnalysis({ ...emptyCreativeAnalysis, status: "analyzing" });
     generateCopyForContext(file.name, nextAssetKind);
 
-    const nextAnalysis = await analyzeCreativeFile(
+    const browserAnalysis = await analyzeCreativeFile(
       file,
       nextAssetUrl,
       nextAssetKind,
     );
-    setCreativeAnalysis(nextAnalysis);
+    const browserPublicAnalysis = stripInternalFrameData(browserAnalysis);
+    setCreativeAnalysis(browserPublicAnalysis);
     generateCopyForContext(
       file.name,
       nextAssetKind,
     );
+
+    if (browserAnalysis.status === "completed") {
+      setCreativeAnalysis({
+        ...browserPublicAnalysis,
+        status: "analyzing",
+        analysisWarnings: [
+          ...browserPublicAnalysis.analysisWarnings,
+          "Running AI vision review on sampled creative frames...",
+        ],
+      });
+
+      const visionAnalysis = await runVisionAnalysis({
+        filename: file.name,
+        postType: suitablePostType(
+          nextAssetKind,
+          file.name,
+          parseCreativeFilename(file.name, campaign.name),
+        ),
+        assetKind: nextAssetKind,
+        frameDataUrls: browserAnalysis.frameDataUrls,
+        browserSummary: browserAnalysis.visualSummary,
+      });
+      const mergedAnalysis: CreativeAnalysisState = {
+        ...browserPublicAnalysis,
+        status: "completed",
+        detectedText: visionAnalysis.detectedText ?? browserPublicAnalysis.detectedText,
+        visualSummary:
+          visionAnalysis.visualSummary || browserPublicAnalysis.visualSummary,
+        detectedSubjects:
+          visionAnalysis.detectedSubjects?.length
+            ? visionAnalysis.detectedSubjects
+            : browserPublicAnalysis.detectedSubjects,
+        copyAngles: visionAnalysis.copyAngles ?? [],
+        hookIdeas: visionAnalysis.hookIdeas ?? [],
+        confidence:
+          visionAnalysis.confidence && visionAnalysis.confidence > browserPublicAnalysis.confidence
+            ? visionAnalysis.confidence
+            : browserPublicAnalysis.confidence,
+        framesAnalyzed: browserPublicAnalysis.framesAnalyzed,
+        analysisWarnings: [
+          ...browserPublicAnalysis.analysisWarnings,
+          ...(visionAnalysis.analysisWarnings ?? []),
+        ],
+        visionConfigured: visionAnalysis.visionConfigured,
+        visionModel: visionAnalysis.visionModel,
+      };
+
+      setCreativeAnalysis(mergedAnalysis);
+      generateCopyForContext(file.name, nextAssetKind, mergedAnalysis.hookIdeas);
+    }
   }
 
   function handleFilenameChange(value: string) {
@@ -616,6 +769,47 @@ export function MarketingManager({
                         {" | "}
                         Confidence: {Math.round(creativeAnalysis.confidence * 100)}%
                       </p>
+                      {creativeAnalysis.visionConfigured === false ? (
+                        <p className="text-amber-800">
+                          AI vision is not configured yet; using browser frame
+                          sampling only.
+                        </p>
+                      ) : creativeAnalysis.visionConfigured ? (
+                        <p>
+                          AI vision reviewed sampled frames
+                          {creativeAnalysis.visionModel
+                            ? ` with ${creativeAnalysis.visionModel}`
+                            : ""}
+                          .
+                        </p>
+                      ) : null}
+                      {creativeAnalysis.detectedText ? (
+                        <p>Detected text: {creativeAnalysis.detectedText}</p>
+                      ) : null}
+                      {creativeAnalysis.hookIdeas.length > 0 ? (
+                        <div>
+                          <p className="font-semibold text-stone-800">
+                            Hook ideas
+                          </p>
+                          <ul className="space-y-1">
+                            {creativeAnalysis.hookIdeas.map((hook) => (
+                              <li key={hook}>{hook}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
+                      {creativeAnalysis.copyAngles.length > 0 ? (
+                        <div>
+                          <p className="font-semibold text-stone-800">
+                            Copy angles
+                          </p>
+                          <ul className="space-y-1">
+                            {creativeAnalysis.copyAngles.map((angle) => (
+                              <li key={angle}>{angle}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                       {creativeAnalysis.analysisWarnings.length > 0 ? (
                         <ul className="space-y-1 text-amber-800">
                           {creativeAnalysis.analysisWarnings.map((warning) => (
