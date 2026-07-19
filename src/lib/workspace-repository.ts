@@ -17,6 +17,9 @@ export type LearningRecordView = {
   aiDraft: string;
   finalCopy: string;
   editReason: string;
+  ctaUsed: string;
+  formattingPattern: string;
+  voicePattern: string;
   finalizedAt: string;
 };
 
@@ -62,6 +65,48 @@ function formatDate(date: Date) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function meaningfulLines(copy: string) {
+  return copy
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !line.startsWith("#"));
+}
+
+function extractCta(copy: string) {
+  const lines = meaningfulLines(copy);
+
+  return lines.at(-1) ?? "";
+}
+
+function deriveFormattingPattern(copy: string) {
+  const lines = meaningfulLines(copy);
+  const paragraphCount = lines.length;
+  const averageLineLength =
+    paragraphCount > 0
+      ? Math.round(
+          lines.reduce((total, line) => total + line.length, 0) /
+            paragraphCount,
+        )
+      : 0;
+
+  if (paragraphCount <= 3) {
+    return `Concise structure: ${paragraphCount} short paragraphs, average ${averageLineLength} characters.`;
+  }
+
+  return `Paragraph structure: ${paragraphCount} scannable lines, average ${averageLineLength} characters.`;
+}
+
+function deriveVoicePattern(copy: string, editReason: string) {
+  const firstLine = meaningfulLines(copy)[0] ?? "";
+  const ownerGuidance = editReason.trim();
+
+  return [ownerGuidance ? `Owner guidance: ${ownerGuidance}` : undefined, firstLine ? `Opening pattern: ${firstLine}` : undefined]
+    .filter(Boolean)
+    .join(" | ")
+    .slice(0, 500);
 }
 
 export async function ensureSeedData() {
@@ -196,6 +241,9 @@ export async function getLearningRecords(): Promise<LearningRecordView[]> {
     aiDraft: record.aiDraft,
     finalCopy: record.finalCopy,
     editReason: record.editReason ?? "",
+    ctaUsed: record.ctaUsed ?? "",
+    formattingPattern: record.formattingPattern ?? "",
+    voicePattern: record.voicePattern ?? "",
     finalizedAt: formatDate(record.createdAt),
   }));
 }
@@ -229,6 +277,9 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         aiDraft: input.instagramSuggestedCopy,
         finalCopy: instagramFinalCopy,
         editReason: input.editReason,
+        ctaUsed: extractCta(instagramFinalCopy),
+        formattingPattern: deriveFormattingPattern(instagramFinalCopy),
+        voicePattern: deriveVoicePattern(instagramFinalCopy, input.editReason),
         finalizedAt: timestamp,
       },
       {
@@ -240,6 +291,9 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         aiDraft: input.facebookSuggestedCopy,
         finalCopy: facebookFinalCopy,
         editReason: input.editReason,
+        ctaUsed: extractCta(facebookFinalCopy),
+        formattingPattern: deriveFormattingPattern(facebookFinalCopy),
+        voicePattern: deriveVoicePattern(facebookFinalCopy, input.editReason),
         finalizedAt: timestamp,
       },
     );
@@ -346,6 +400,7 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
             currentEditableCopy: facebookFinalCopy,
             finalCopy: facebookFinalCopy,
             editReason: input.editReason || null,
+            ctaUsed: extractCta(facebookFinalCopy) || null,
             finalizedAt: new Date(),
           },
           {
@@ -354,6 +409,7 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
             currentEditableCopy: instagramFinalCopy,
             finalCopy: instagramFinalCopy,
             editReason: input.editReason || null,
+            ctaUsed: extractCta(instagramFinalCopy) || null,
             finalizedAt: new Date(),
           },
         ],
@@ -374,6 +430,10 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         aiDraft: input.facebookSuggestedCopy,
         finalCopy: facebookFinalCopy,
         editReason: input.editReason || null,
+        ctaUsed: extractCta(facebookFinalCopy) || null,
+        formattingPattern: deriveFormattingPattern(facebookFinalCopy),
+        voicePattern: deriveVoicePattern(facebookFinalCopy, input.editReason),
+        confidence: input.editReason.trim() ? 0.85 : 0.65,
         patternScope: "campaign",
         rationale: `Post-type learning (${postType}) from GeneratedCopySet ${copySet.id}`,
       },
@@ -388,6 +448,10 @@ export async function saveFinalizedCopy(input: FinalizeCopyInput) {
         aiDraft: input.instagramSuggestedCopy,
         finalCopy: instagramFinalCopy,
         editReason: input.editReason || null,
+        ctaUsed: extractCta(instagramFinalCopy) || null,
+        formattingPattern: deriveFormattingPattern(instagramFinalCopy),
+        voicePattern: deriveVoicePattern(instagramFinalCopy, input.editReason),
+        confidence: input.editReason.trim() ? 0.85 : 0.65,
         patternScope: "campaign",
         rationale: `Post-type learning (${postType}) from GeneratedCopySet ${copySet.id}`,
       },

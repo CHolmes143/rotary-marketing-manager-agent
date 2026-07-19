@@ -13,6 +13,9 @@ export type CopyLearningSignal = {
   aiDraft: string;
   finalCopy: string;
   editReason: string;
+  ctaUsed?: string;
+  formattingPattern?: string;
+  voicePattern?: string;
 };
 
 function factValue(campaign: Campaign, category: string) {
@@ -161,12 +164,16 @@ function applyTerminologyRules(copy: string) {
     .replace(/\bfair\b/gi, "event");
 }
 
-function relevantLearningSignals(
+export function relevantLearningSignalsForContext(
   signals: CopyLearningSignal[],
+  parseResult: FilenameParseResult,
+  confirmedContentType: string,
   postType: string,
-  audience: string,
-  subject: string,
 ) {
+  const subject = parseResult.subject ?? "this Rotary update";
+  const contentType =
+    cleanContentType(confirmedContentType) ?? cleanContentType(parseResult.contentType);
+  const audience = audienceCue(contentType, subject);
   const normalizedAudience = audience.toLowerCase();
   const normalizedSubject = subject.toLowerCase();
   const audienceKeywords = normalizedAudience
@@ -252,8 +259,11 @@ function removeLearnedAvoidances(copy: string, signals: CopyLearningSignal[]) {
     .trim();
 }
 
-function ownerApprovedOpening(signals: CopyLearningSignal[]) {
+function ownerApprovedOpening(signals: CopyLearningSignal[], postType: string) {
+  if (postType !== "Reel") return undefined;
+
   return signals
+    .filter((signal) => signal.editReason.trim().length > 0)
     .map((signal) => signal.finalCopy.split(/\n+/)[0]?.trim() ?? "")
     .map(applyTerminologyRules)
     .find((line) => line.length >= 18 && line.length <= 170);
@@ -296,7 +306,7 @@ function postTypeOpening(
   hookIdeas: string[],
   learningSignals: CopyLearningSignal[],
 ) {
-  const approvedOpening = ownerApprovedOpening(learningSignals);
+  const approvedOpening = ownerApprovedOpening(learningSignals, postType);
   if (approvedOpening) return approvedOpening;
 
   const creativeHook = safeCreativeHook(hookIdeas);
@@ -351,11 +361,11 @@ export function generatePlatformDrafts(
   const goalLine = creativeGoalLine(audience, subject, purpose);
   const kind = audienceKind(audience);
   const detailLines = publicDetailLines(campaign, audience);
-  const relevantSignals = relevantLearningSignals(
+  const relevantSignals = relevantLearningSignalsForContext(
     learningSignals,
+    parseResult,
+    confirmedContentType,
     postType,
-    audience,
-    subject,
   );
   const facebookCta =
     kind === "vendor"

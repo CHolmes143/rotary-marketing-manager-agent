@@ -14,6 +14,7 @@ import { useMemo, useState } from "react";
 import { finalizeCopy } from "@/app/actions";
 import {
   generatePlatformDrafts,
+  relevantLearningSignalsForContext,
   type CopyLearningSignal,
 } from "@/lib/copy-generator";
 import { parseCreativeFilename } from "@/lib/filename-parser";
@@ -430,7 +431,20 @@ export function MarketingManager({
     aiDraft: record.aiDraft,
     finalCopy: record.finalCopy,
     editReason: record.editReason,
+    ctaUsed: record.ctaUsed,
+    formattingPattern: record.formattingPattern,
+    voicePattern: record.voicePattern,
   }));
+  const appliedLearningSignals = relevantLearningSignalsForContext(
+    learningSignals,
+    parseResult,
+    parsedContentType,
+    postType,
+  );
+  const appliedEditReasons = appliedLearningSignals
+    .map((signal) => signal.editReason.trim())
+    .filter(Boolean)
+    .slice(0, 3);
 
   function generateCopyForContext(
     nextFilename: string,
@@ -854,6 +868,28 @@ export function MarketingManager({
                   Upload a creative to generate copy only for the post type the
                   asset is suited for. Static images will not receive Reel copy.
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Badge tone={appliedLearningSignals.length ? "good" : "neutral"}>
+                    {appliedLearningSignals.length
+                      ? `${appliedLearningSignals.length} learned pattern${appliedLearningSignals.length === 1 ? "" : "s"} applied`
+                      : "No matching learning yet"}
+                  </Badge>
+                  {appliedEditReasons.length > 0 ? (
+                    <Badge tone="blue">
+                      {appliedEditReasons.length} owner note{appliedEditReasons.length === 1 ? "" : "s"}
+                    </Badge>
+                  ) : null}
+                </div>
+                {appliedEditReasons.length > 0 ? (
+                  <div className="mt-3 rounded-md border border-sky-100 bg-sky-50 p-3 text-xs leading-5 text-sky-950">
+                    <p className="font-semibold">Recent owner guidance</p>
+                    <ul className="mt-1 space-y-1">
+                      {appliedEditReasons.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -901,9 +937,9 @@ export function MarketingManager({
               <div>
                 <h2 className="text-lg font-semibold">Learning Records</h2>
                 <p className="mt-1 text-sm text-stone-600">
-                  Finalized copy stores suggested text, revised approved text,
-                  edit reason, campaign, post type, content type, subject, and
-                  timestamp. Platform is retained as a delivery channel.
+                  Finalized copy stores the approved text, edit reason, CTA,
+                  formatting pattern, voice pattern, creative context, post
+                  type, and timestamp.
                 </p>
               </div>
               <Badge tone={records.length ? "good" : "neutral"}>
