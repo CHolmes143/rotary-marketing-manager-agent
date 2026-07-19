@@ -116,7 +116,7 @@ function creativeGoalLine(audience: string, subject: string, purpose: string) {
     return "Volunteer support helps make the day organized, welcoming, and memorable for families.";
   }
 
-  return "The event brings families, businesses, and neighbors together around a shared local purpose.";
+  return "Every visit, booth, donation, and share helps turn local attention into scholarship support for Dripping Springs students.";
 }
 
 function publicDetailLines(campaign: Campaign, audience: string) {
@@ -149,6 +149,10 @@ function publicDetailLines(campaign: Campaign, audience: string) {
 
 function applyTerminologyRules(copy: string) {
   return copy
+    .replace(
+      /The event brings families, businesses, and neighbors together around a shared local purpose\.?/gi,
+      "",
+    )
     .replace(/https?:\/\/(?:www\.)?backtoschoolrodeo\.com\/?/gi, "BackToSchoolRodeo")
     .replace(/\bBack to School Rodeo\b/g, "BackToSchoolRodeo")
     .replace(/\bStickHorse\b/g, "Stick Horse")
@@ -267,6 +271,8 @@ function safeCreativeHook(hookIdeas: string[]) {
     "visual summary",
     "frame",
     "fair",
+    "shared local purpose",
+    "families, businesses, and neighbors",
   ];
 
   const selectedHook = hookIdeas.find((hook) => {
