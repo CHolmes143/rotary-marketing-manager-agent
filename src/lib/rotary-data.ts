@@ -360,6 +360,15 @@ export const campaigns: Campaign[] = [
         stability: "permanent",
       },
       {
+        id: "fact-event-terminology-rules",
+        category: "terminology",
+        label: "Event terminology rules",
+        value:
+          "Stick Horse is always two words. Do not use em dashes or long dashes in public copy. Do not describe the event as a fair. Because the public name includes Rodeo but the experience is broader than a traditional rodeo, prefer event, community event, family event, event day, or western-themed community event in descriptive copy.",
+        status: "approved",
+        stability: "permanent",
+      },
+      {
         id: "fact-agent-guidance",
         category: "voice",
         label: "Agent guidance",
@@ -382,7 +391,7 @@ export const campaigns: Campaign[] = [
         category: "voice",
         label: "Nonprofit story formula",
         value:
-          "For impact stories, center one relatable person or group, explain the local challenge with dignity, show the Rotary Rodeo as the mechanism of support, name a specific positive outcome when facts are available, and invite the reader to continue that impact through tickets, sponsorship, vendor participation, donations, volunteering, or sharing.",
+          "For impact stories, center one relatable person or group, explain the local challenge with dignity, show the event as the mechanism of support, name a specific positive outcome when facts are available, and invite the reader to continue that impact through tickets, sponsorship, vendor participation, donations, volunteering, or sharing.",
         status: "approved",
         stability: "permanent",
       },

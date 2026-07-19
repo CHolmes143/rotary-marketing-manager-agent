@@ -21,8 +21,20 @@ type VisionJson = {
 
 function asStringArray(value: unknown) {
   return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string").slice(0, 6)
+    ? value
+        .filter((item): item is string => typeof item === "string")
+        .map(sanitizePublicLanguage)
+        .slice(0, 6)
     : [];
+}
+
+function sanitizePublicLanguage(value: string) {
+  return value
+    .replace(/\bStickHorse\b/g, "Stick Horse")
+    .replace(/\bStickhorse\b/g, "Stick Horse")
+    .replace(/[—–]/g, ",")
+    .replace(/\bfair\b/gi, "event")
+    .trim();
 }
 
 function normalizeVisionJson(value: unknown): VisionJson {
@@ -37,9 +49,13 @@ function normalizeVisionJson(value: unknown): VisionJson {
 
   return {
     detectedText:
-      typeof record.detectedText === "string" ? record.detectedText.trim() : "",
+      typeof record.detectedText === "string"
+        ? sanitizePublicLanguage(record.detectedText)
+        : "",
     visualSummary:
-      typeof record.visualSummary === "string" ? record.visualSummary.trim() : "",
+      typeof record.visualSummary === "string"
+        ? sanitizePublicLanguage(record.visualSummary)
+        : "",
     detectedSubjects: asStringArray(record.detectedSubjects),
     copyAngles: asStringArray(record.copyAngles),
     hookIdeas: asStringArray(record.hookIdeas).slice(0, 4),
@@ -126,6 +142,7 @@ export async function POST(request: Request) {
     "Return compact JSON only with keys: detectedText, visualSummary, detectedSubjects, copyAngles, hookIdeas, confidence.",
     "Do not write finished post copy. Hook ideas must be public-facing first lines, not analysis notes.",
     "Avoid internal phrases like creative context, sampled frames, average brightness, metadata, or use this with.",
+    "Style rules: Stick Horse is two words. Do not use em dashes or long dashes. Do not call this a fair. Prefer event, community event, family event, event day, or western-themed community event over describing it as a rodeo unless using the official event name.",
     "Prefer specific, engaging hooks based on what is visibly happening in the creative.",
   ].join(" ");
 

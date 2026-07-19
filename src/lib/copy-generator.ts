@@ -141,7 +141,11 @@ function publicDetailLines(campaign: Campaign, audience: string) {
 function applyTerminologyRules(copy: string) {
   return copy
     .replace(/https?:\/\/(?:www\.)?backtoschoolrodeo\.com\/?/gi, "BackToSchoolRodeo")
-    .replace(/\bBack to School Rodeo\b/g, "BackToSchoolRodeo");
+    .replace(/\bBack to School Rodeo\b/g, "BackToSchoolRodeo")
+    .replace(/\bStickHorse\b/g, "Stick Horse")
+    .replace(/\bStickhorse\b/g, "Stick Horse")
+    .replace(/[—–]/g, ",")
+    .replace(/\bfair\b/gi, "event");
 }
 
 function safeCreativeHook(hookIdeas: string[]) {
@@ -155,17 +159,21 @@ function safeCreativeHook(hookIdeas: string[]) {
     "detected text",
     "visual summary",
     "frame",
+    "fair",
   ];
 
-  return hookIdeas.find((hook) => {
-    const normalizedHook = hook.toLowerCase();
+  const selectedHook = hookIdeas.find((hook) => {
+    const cleanedHook = applyTerminologyRules(hook);
+    const normalizedHook = cleanedHook.toLowerCase();
 
     return (
-      hook.trim().length >= 18 &&
-      hook.trim().length <= 170 &&
+      cleanedHook.trim().length >= 18 &&
+      cleanedHook.trim().length <= 170 &&
       !blockedPhrases.some((phrase) => normalizedHook.includes(phrase))
     );
-  })?.trim();
+  });
+
+  return selectedHook ? applyTerminologyRules(selectedHook).trim() : undefined;
 }
 
 function postTypeOpening(
@@ -192,7 +200,7 @@ function postTypeOpening(
       return "Put your business where the community is already gathering.";
     }
 
-    return "Free admission, live music, family fun, and a rodeo day that helps fund local scholarships.";
+    return "Free admission, live music, family fun, and an event day that helps fund local scholarships.";
   }
 
   if (postType === "Carousel") {
@@ -203,7 +211,7 @@ function postTypeOpening(
     return "Quick reminder before this gets buried in your feed.";
   }
 
-  return `Calling ${audience}: ${eventName} is almost here.`;
+  return `Calling ${audience}: this community event is almost here.`;
 }
 
 export function generatePlatformDrafts(
