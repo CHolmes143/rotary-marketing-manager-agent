@@ -6,6 +6,15 @@ export type PlatformDrafts = {
   instagram: string;
 };
 
+export type CopyLearningSignal = {
+  postType: string;
+  contentType: string;
+  subject: string;
+  aiDraft: string;
+  finalCopy: string;
+  editReason: string;
+};
+
 function factValue(campaign: Campaign, category: string) {
   return approvedFacts(campaign).find((fact) => fact.category === category)
     ?.value;
@@ -148,6 +157,104 @@ function applyTerminologyRules(copy: string) {
     .replace(/\bfair\b/gi, "event");
 }
 
+function relevantLearningSignals(
+  signals: CopyLearningSignal[],
+  postType: string,
+  audience: string,
+  subject: string,
+) {
+  const normalizedAudience = audience.toLowerCase();
+  const normalizedSubject = subject.toLowerCase();
+  const audienceKeywords = normalizedAudience
+    .split(/\W+/)
+    .filter((word) => word.length > 4);
+
+  return signals
+    .filter((signal) => {
+      const haystack = `${signal.postType} ${signal.contentType} ${signal.subject}`.toLowerCase();
+      const matchesAudience = audienceKeywords.some((word) =>
+        haystack.includes(word),
+      );
+      const matchesSubject =
+        normalizedSubject.length > 4 && haystack.includes(normalizedSubject);
+
+      return (
+        matchesSubject ||
+        (signal.postType === postType && matchesAudience)
+      );
+    })
+    .slice(0, 8);
+}
+
+function extractQuotedPhrases(value: string) {
+  return Array.from(value.matchAll(/["']([^"']{4,160})["']/g), (match) =>
+    match[1].trim(),
+  );
+}
+
+function extractAvoidancePhrases(reason: string) {
+  const phrases = extractQuotedPhrases(reason);
+  const avoidMatches = Array.from(
+    reason.matchAll(
+      /\b(?:do not|don't|dont|never|avoid|remove|stop)\s+(?:use|using|say|saying|include|including)?\s*([^.!?\n]{4,160})/gi,
+    ),
+    (match) => match[1].trim(),
+  );
+
+  return [...phrases, ...avoidMatches]
+    .map(applyTerminologyRules)
+    .map((phrase) => phrase.replace(/^this\s+/i, "").trim())
+    .filter((phrase) => phrase.length >= 4);
+}
+
+function rejectedDraftLines(signal: CopyLearningSignal) {
+  if (!signal.editReason.trim()) return [];
+
+  const finalCopy = signal.finalCopy.toLowerCase();
+
+  return signal.aiDraft
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter((line) => line.length >= 24)
+    .filter((line) => !finalCopy.includes(line.toLowerCase()))
+    .slice(0, 4);
+}
+
+function removeLearnedAvoidances(copy: string, signals: CopyLearningSignal[]) {
+  const avoidances = signals.flatMap((signal) => [
+    ...extractAvoidancePhrases(signal.editReason),
+    ...rejectedDraftLines(signal),
+  ]);
+
+  if (avoidances.length === 0) return copy;
+
+  return copy
+    .split("\n")
+    .filter((line) => {
+      const normalizedLine = line.toLowerCase();
+
+      return !avoidances.some((avoidance) => {
+        const normalizedAvoidance = avoidance.toLowerCase();
+
+        return (
+          normalizedAvoidance.length >= 8 &&
+          (normalizedLine.includes(normalizedAvoidance) ||
+            normalizedAvoidance.includes(normalizedLine))
+        );
+      });
+    })
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function ownerApprovedOpening(signals: CopyLearningSignal[]) {
+  return signals
+    .map((signal) => signal.finalCopy.split(/\n+/)[0]?.trim() ?? "")
+    .map(applyTerminologyRules)
+    .find((line) => line.length >= 18 && line.length <= 170);
+}
+
 function safeCreativeHook(hookIdeas: string[]) {
   const blockedPhrases = [
     "creative context",
@@ -181,7 +288,11 @@ function postTypeOpening(
   audience: string,
   eventName: string,
   hookIdeas: string[],
+  learningSignals: CopyLearningSignal[],
 ) {
+  const approvedOpening = ownerApprovedOpening(learningSignals);
+  if (approvedOpening) return approvedOpening;
+
   const creativeHook = safeCreativeHook(hookIdeas);
   if (creativeHook) return creativeHook;
 
@@ -220,6 +331,7 @@ export function generatePlatformDrafts(
   confirmedContentType: string,
   postType = "Post",
   hookIdeas: string[] = [],
+  learningSignals: CopyLearningSignal[] = [],
 ): PlatformDrafts {
   const eventName = factValue(campaign, "event_identity") ?? campaign.name;
   const beneficiary =
@@ -233,6 +345,12 @@ export function generatePlatformDrafts(
   const goalLine = creativeGoalLine(audience, subject, purpose);
   const kind = audienceKind(audience);
   const detailLines = publicDetailLines(campaign, audience);
+  const relevantSignals = relevantLearningSignals(
+    learningSignals,
+    postType,
+    audience,
+    subject,
+  );
   const facebookCta =
     kind === "vendor"
       ? "Reserve your vendor space at BackToSchoolRodeo."
@@ -251,7 +369,7 @@ export function generatePlatformDrafts(
         : "Event details: BackToSchoolRodeo";
 
   const facebook = [
-      postTypeOpening(postType, audience, eventName, hookIdeas),
+      postTypeOpening(postType, audience, eventName, hookIdeas, relevantSignals),
       "",
       ...(kind === "vendor" || kind === "stick_horse" ? [] : [goalLine, ""]),
       ...detailLines.slice(0, 3).flatMap((line) => [line, ""]),
@@ -277,7 +395,7 @@ export function generatePlatformDrafts(
     ].filter((line): line is string => line !== undefined).join("\n");
 
   return {
-    facebook: applyTerminologyRules(facebook),
-    instagram: applyTerminologyRules(instagram),
+    facebook: applyTerminologyRules(removeLearnedAvoidances(facebook, relevantSignals)),
+    instagram: applyTerminologyRules(removeLearnedAvoidances(instagram, relevantSignals)),
   };
 }

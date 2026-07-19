@@ -12,7 +12,10 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { finalizeCopy } from "@/app/actions";
-import { generatePlatformDrafts } from "@/lib/copy-generator";
+import {
+  generatePlatformDrafts,
+  type CopyLearningSignal,
+} from "@/lib/copy-generator";
 import { parseCreativeFilename } from "@/lib/filename-parser";
 import { suitablePostType } from "@/lib/post-type";
 import type { LearningRecordView } from "@/lib/workspace-repository";
@@ -420,6 +423,14 @@ export function MarketingManager({
 
   const parsedContentType = parseResult.contentType ?? "Unconfirmed content type";
   const postType = suitablePostType(assetKind, filename, parseResult);
+  const learningSignals: CopyLearningSignal[] = records.map((record) => ({
+    postType: record.postType,
+    contentType: record.contentType,
+    subject: record.subject,
+    aiDraft: record.aiDraft,
+    finalCopy: record.finalCopy,
+    editReason: record.editReason,
+  }));
 
   function generateCopyForContext(
     nextFilename: string,
@@ -438,6 +449,7 @@ export function MarketingManager({
       nextParseResult.contentType ?? "Unconfirmed content type",
       nextPostType,
       hookIdeas,
+      learningSignals,
     );
     const sharedPostTypeDraft = drafts.facebook;
     setSuggestedCopy(sharedPostTypeDraft);
